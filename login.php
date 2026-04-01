@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | KRC System</title>
+    <title>Login | KRC Dailytask Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -93,40 +93,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                 </svg>
             </div>
-            <h1 class="text-3xl font-bold text-white tracking-tight">KRC <span class="text-blue-500">System</span></h1>
+            <h1 class="text-3xl font-bold text-white tracking-tight">KRC <span class="text-blue-500">Task Tracker</span></h1>
             <p class="text-slate-400 text-sm mt-2 font-medium tracking-wide">Enter your portal credentials</p>
         </div>
 
-        <form method="POST" class="space-y-6">
-            
-            <?php if(isset($error)): ?>
-                <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-xs py-3 px-4 rounded-xl text-center font-semibold tracking-wide animate-pulse">
-                    <?php echo $error; ?>
-                </div>
-            <?php endif; ?>
+      <form method="POST" class="space-y-6">
+    
+    <?php if(isset($error)): ?>
+        <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-xs py-3 px-4 rounded-xl text-center font-semibold tracking-wide animate-pulse">
+            <?php echo $error; ?>
+        </div>
+    <?php endif; ?>
 
-            <div class="space-y-2">
-                <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-[0.2em] ml-1">Username</label>
-                <input type="text" name="username" required 
-                    class="neon-input w-full px-5 py-4 rounded-2xl text-white placeholder-slate-600 focus:ring-0" 
-                    placeholder="e.g. joderio">
-            </div>
+    <div class="space-y-2">
+        <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-[0.2em] ml-1">Username</label>
+        <input type="text" name="username" required 
+            class="neon-input w-full px-5 py-4 rounded-2xl text-white placeholder-slate-600 focus:ring-0" 
+            placeholder="e.g. joderio">
+    </div>
 
-            <div class="space-y-2">
-                <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-[0.2em] ml-1">Password</label>
-                <input type="password" name="password" required 
-                    class="neon-input w-full px-5 py-4 rounded-2xl text-white placeholder-slate-600 focus:ring-0" 
-                    placeholder="••••••••">
-            </div>
+    <div class="space-y-2">
+        <label class="block text-[10px] uppercase font-bold text-slate-500 tracking-[0.2em] ml-1">Password</label>
+        <input type="password" name="password" required 
+            class="neon-input w-full px-5 py-4 rounded-2xl text-white placeholder-slate-600 focus:ring-0" 
+            placeholder="••••••••">
+    </div>
 
-            <button type="submit" 
-                class="btn-glow w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center group">
-                Sign In
-                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                </svg>
-            </button>
-        </form>
+    <button type="submit" 
+        class="btn-glow w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center group">
+        Sign In
+        <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+        </svg>
+    </button>
+</form>
+
+<div class="mt-6 pt-6 border-t border-white/5 space-y-4">
+    <p class="text-center text-slate-500 text-xs tracking-widest uppercase font-bold">New here?</p>
+    
+    <a href="register.php" 
+        class="btn-glow w-full bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 font-bold py-4 rounded-2xl transition-all flex items-center justify-center group">
+        Create Account
+        <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+        </svg>
+    </a>
+</div>
 
         <div class="mt-10 text-center">
             <p class="text-[10px] text-slate-600 uppercase font-bold tracking-widest">
