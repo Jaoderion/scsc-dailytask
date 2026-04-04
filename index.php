@@ -61,11 +61,61 @@ $employee_name = $_SESSION['employee_name'];
             transform: translateY(4px);
         }
 
-        @media print {
-            .no-print { display: none !important; }
-            #report-preview { display: block !important; }
-            body { background: white; color: black; }
+       
+
+
+   @media print {
+        @page { 
+            size: portrait; 
+            margin: 0; /* Let the image handle the margins */
         }
+        .no-print { display: none !important; }
+        #report-preview { 
+            display: block !important; 
+            width: 100%; 
+            background: white !important;
+        }
+    }
+
+    /* Print Container */
+    #report-preview {
+        padding: 0;
+        margin: 0;
+        color: black;
+        font-family: "Arial", sans-serif;
+    }
+
+    .print-img-header, .print-img-footer {
+        width: 100%;
+        display: block;
+    }
+
+    .print-content-body {
+        padding: 0 0.5in; /* Standard document side padding */
+    }
+
+    /* Table Styling to match Word Document */
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .styled-table th, .styled-table td {
+        border: 1px solid black;
+        padding: 4px 8px;
+        font-size: 10pt;
+    }
+
+    .styled-table th {
+        background-color: #ffffff;
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .text-center { text-align: center; }
+    .font-bold { font-weight: bold; }
     </style>
 </head>
 <body class="text-slate-200 min-h-screen">
@@ -118,20 +168,39 @@ $employee_name = $_SESSION['employee_name'];
         </button>
     </main>
 
-    <div id="report-preview" class="hidden bg-white p-12 text-black font-serif">
-        <h2 class="text-center text-2xl font-bold border-b-2 border-black pb-4 mb-6 uppercase">Accomplishment Report</h2>
-        <table class="w-full border-collapse border border-black">
+ <div id="report-preview" class="hidden">
+    <img src="header.png" class="print-img-header" alt="College Header">
+
+    <div class="print-content-body">
+        <div class="text-center mt-4">
+            <h3 class="font-bold border-b border-black inline-block px-4">ACCOMPLISHMENT REPORT</h3>
+            <p class="text-sm mt-1">Period Covered: <span id="print-period" class="font-bold">JAN 01-31, 2025</span></p>
+        </div>
+
+        <div class="mt-4 mb-4 text-sm">
+            <p>Employee Name: <span class="font-bold"><?php echo $employee_name; ?></span></p>
+            <p>Department/Unit: <span class="font-bold">Knowledge Resource Center</span></p>
+        </div>
+
+        <table class="styled-table">
             <thead>
-                <tr class="bg-gray-100">
-                    <th class="border border-black p-2 text-xs">Date</th>
-                    <th class="border border-black p-2 text-left text-xs">Activity</th>
-                    <th class="border border-black p-2 text-xs">Time Range</th>
-                    <th class="border border-black p-2 text-xs">Remarks</th>
+                <tr>
+                    <th width="15%">Date</th>
+                    <th width="45%">Activity/Accomplishment</th>
+                    <th width="25%">Allotted Time</th>
+                    <th width="15%">Remarks</th>
                 </tr>
             </thead>
-            <tbody id="table-output"></tbody>
+            <tbody id="table-output">
+                </tbody>
         </table>
     </div>
+
+    <img src="footer.png" class="print-img-footer" style="margin-top: 20px;" alt="College Footer">
+</div>
+
+
+
 
     <script>
         function createNewDay() {
@@ -190,7 +259,7 @@ $employee_name = $_SESSION['employee_name'];
             handleInput();
         }
 // Change the last parameter to default to "-Doned"
-function addTaskRowToElement(taskList, desc="", start="", end="", remarks="-Doned") {
+function addTaskRowToElement(taskList, desc="", start="", end="", remarks="-DONE") {
     const row = document.createElement('div');
     row.className = 'task-row flex flex-col gap-3 group animate-in fade-in slide-in-from-left-4 duration-300 mb-6';
     row.innerHTML = `
@@ -266,32 +335,57 @@ function addTaskRowToElement(taskList, desc="", start="", end="", remarks="-Done
 
     function addTaskRow(btn) {
     // We pass "-Doned" as the 5th argument
-    addTaskRowToElement(btn.previousElementSibling, "", "08:00 AM", "05:00 PM", "-Doned");
+    addTaskRowToElement(btn.previousElementSibling, "", "08:00 AM", "05:00 PM", "-DONE");
     handleInput();
 }
 
         function handleInput() { renderTable(); updateCopyDropdowns(); }
 
-        function renderTable() {
-            const output = document.getElementById('table-output');
-            output.innerHTML = '';
-            document.querySelectorAll('.day-block').forEach(block => {
-                const date = block.querySelector('.d-date').value;
-                const rows = block.querySelectorAll('.task-row');
-                rows.forEach((row, index) => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td class="border border-black p-2 text-center text-xs font-bold">${index === 0 ? date : ''}</td>
-                        <td class="border border-black p-2 text-sm">${row.querySelector('.t-desc').value}</td>
-                        <td class="border border-black p-2 text-center text-xs">
-                            ${row.querySelector('.t-start').value} - ${row.querySelector('.t-end').value} - Doned
-                        </td>
-                        <td class="border border-black p-2 text-xs italic">${row.querySelector('.t-remarks').value}</td>
-                    `;
-                    output.appendChild(tr);
-                });
-            });
-        }
+function renderTable() {
+    const output = document.getElementById('table-output');
+    output.innerHTML = '';
+    
+    const blocks = document.querySelectorAll('.day-block');
+    
+    // Update Period Covered header based on first and last entry
+    if(blocks.length > 0) {
+        const firstDate = blocks[0].querySelector('.d-date').value;
+        const lastDate = blocks[blocks.length-1].querySelector('.d-date').value;
+        document.getElementById('print-period').textContent = `${firstDate} - ${lastDate}`;
+    }
+
+    blocks.forEach(block => {
+        const dateValue = block.querySelector('.d-date').value;
+        const taskRows = block.querySelectorAll('.task-row');
+        
+        taskRows.forEach((row, index) => {
+            const tr = document.createElement('tr');
+            
+            // 1. Handle Date Column (Rowspan)
+            let dateCell = "";
+            if (index === 0) {
+                dateCell = `<td rowspan="${taskRows.length}" class="text-center font-bold">${dateValue}</td>`;
+            }
+
+            // 2. Get Data from Inputs
+            const desc = row.querySelector('.t-desc').value;
+            const start = row.querySelector('.t-start').value;
+            const end = row.querySelector('.t-end').value;
+            let remark = row.querySelector('.t-remarks').value;
+            
+            // Default remark if empty
+            if (!remark || remark.trim() === "") remark = "-DONE";
+
+            tr.innerHTML = `
+                ${dateCell}
+                <td>- ${desc}</td>
+                <td class="text-center">${start} — ${end}</td>
+                <td class="text-center font-bold">${remark.toUpperCase()}</td>
+            `;
+            output.appendChild(tr);
+        });
+    });
+}
 
         function updateCopyDropdowns() {
             const allDates = Array.from(document.querySelectorAll('.d-date')).map(i => i.value).filter(v => v.trim() !== "");

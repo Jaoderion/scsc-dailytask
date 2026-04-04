@@ -1,7 +1,7 @@
 <?php
 session_start();
 // Database Connection
-$conn = new mysqli("localhost", "root", "", "krc_system");
+$conn = new mysqli("localhost", "root", "123456", "krc_system");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $_POST['username'];
