@@ -8,7 +8,7 @@ if (!isset($_SESSION['username'])) {
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "123456", "krc_system");
+$conn = new mysqli("localhost", "root", "", "krc_system");
 $logged_user = $_SESSION['username'];
 
 if ($conn->connect_error) {

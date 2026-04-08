@@ -1,0 +1,24 @@
+{
+  "name": "KRC Task Tracker",
+  "short_name": "KRC Task Tracker",
+  "description": "Daily Task Tracker & Accomplishment Report Generator",
+  "start_url": "login.php", 
+  "display": "standalone",
+  "scope": "./",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
