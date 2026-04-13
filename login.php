@@ -1,4 +1,6 @@
+
 <?php
+
 session_start();
 $conn = new mysqli("localhost", "root", "", "krc_system");
 
@@ -42,12 +44,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | KRC Dailytask Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="logo.png">
     <style>
         body { 
             font-family: 'Outfit', sans-serif; 
@@ -185,10 +189,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     });
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
+        navigator.serviceWorker.register('/sw.js')
             .then(reg => console.log("SW Active"))
             .catch(err => alert("❌ SW Failed: " + err));
     }
+
 
     window.addEventListener('beforeinstallprompt', (e) => {
         alert("✅ PWA Ready to Install!"); // This will pop up if everything is correct
@@ -205,6 +210,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     });
 </script>
+
+
+
 
 </body>
 </html>

@@ -1,0 +1,23 @@
+RewriteEngine On
+
+# 1. Force the correct MIME type for JS and Manifest files
+AddType application/javascript .js
+AddType application/manifest+json .json
+
+# 2. Explicitly allow sw.js and manifest.json to be accessed 
+# This prevents them from being redirected to login.php or index.php
+<Files "sw.js">
+    RewriteEngine Off
+    Header set Content-Type "application/javascript"
+    Header set Cache-Control "no-cache"
+</Files>
+
+<Files "manifest.json">
+    Header set Content-Type "application/manifest+json"
+</Files>
+
+# 3. Your existing SPA/Clean URL routing (if any)
+# This rule says: If the file doesn't exist, don't try to serve it as sw.js
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]

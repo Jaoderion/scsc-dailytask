@@ -1,3 +1,4 @@
+
 const CACHE_NAME = 'krc-v4'; // Increment version to force update
 const ASSETS = [
   './',
