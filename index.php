@@ -233,7 +233,7 @@ $department = $user_data['department'];
 }
 
 /* Screen visibility - UNCHANGED */
-#report-preview, .print-footer { display: block; }
+#report-preview, .print-footer { display: none; }
 
 /* FORCE TILED GRID ON ALL DEVICES */
 #inputs.view-grid {
