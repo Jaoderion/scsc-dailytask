@@ -45,16 +45,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $delete_stmt->bind_param("s", $logged_user);
     $delete_stmt->execute();
 
-    $stmt = $conn->prepare("INSERT INTO accomplishments (username, report_date, activity, start_time, end_time) VALUES (?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO accomplishments (username, report_date, activity, start_time, end_time, remarks) VALUES (?, ?, ?, ?, ?, ?)");
     
     foreach ($data as $row) {
         // Map JS keys to DB columns + include the username
-        $stmt->bind_param("sssss", 
+        $remarks = isset($row['remarks']) && $row['remarks'] !== '' ? $row['remarks'] : '-DONE';
+        $stmt->bind_param("ssssss",
             $logged_user, 
             $row['date'], 
             $row['desc'], 
             $row['start'], 
-            $row['end']
+            $row['end'],
+            $remarks
         );
         $stmt->execute();
     }

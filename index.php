@@ -89,101 +89,6 @@ html[data-theme="light"] {
 }
 
 /* =========================================================
-   AMBIENT BACKDROP (shared with login.php)
-   ========================================================= */
-.ambient {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-    pointer-events: none;
-}
-
-.orb {
-    position: absolute;
-    border-radius: 9999px;
-    filter: blur(90px);
-    opacity: var(--app-orb-opacity);
-    will-change: transform;
-    transition: opacity 0.6s ease;
-}
-
-.orb-1 {
-    width: 560px; height: 560px;
-    top: -200px; left: -160px;
-    background: radial-gradient(circle at 30% 30%, #3b82f6, #1e40af 55%, transparent 72%);
-    animation: drift-a 24s ease-in-out infinite;
-}
-
-.orb-2 {
-    width: 520px; height: 520px;
-    bottom: -220px; right: -140px;
-    background: radial-gradient(circle at 60% 40%, #06b6d4, #0e7490 55%, transparent 72%);
-    animation: drift-b 28s ease-in-out infinite;
-}
-
-.orb-3 {
-    width: 400px; height: 400px;
-    top: 38%; left: 60%;
-    background: radial-gradient(circle at 50% 50%, #a855f7, #4c1d95 60%, transparent 74%);
-    opacity: calc(var(--app-orb-opacity) * 0.55);
-    animation: drift-c 32s ease-in-out infinite;
-}
-
-@keyframes drift-a {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-    50%      { transform: translate3d(70px, 60px, 0) scale(1.12); }
-}
-@keyframes drift-b {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
-    50%      { transform: translate3d(-80px, -50px, 0) scale(0.95); }
-}
-@keyframes drift-c {
-    0%, 100% { transform: translate3d(0, 0, 0) scale(0.9); }
-    50%      { transform: translate3d(-60px, 40px, 0) scale(1.15); }
-}
-
-.grid-overlay {
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
-    background-size: 58px 58px;
-    mask-image: radial-gradient(ellipse at 50% 30%, #000 5%, transparent 70%);
-    -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 5%, transparent 70%);
-    transition: opacity 0.5s ease;
-}
-
-html[data-theme="light"] .grid-overlay {
-    background-image:
-        linear-gradient(rgba(15,23,42,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(15,23,42,0.05) 1px, transparent 1px);
-}
-
-.noise {
-    position: absolute;
-    inset: 0;
-    opacity: 0.14;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-}
-
-.particle {
-    position: absolute;
-    width: 4px; height: 4px;
-    border-radius: 9999px;
-    background: rgba(125, 211, 252, 0.7);
-    box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
-    animation: float-up linear infinite;
-}
-
-@keyframes float-up {
-    0%   { transform: translateY(20px) scale(0.6); opacity: 0; }
-    12%  { opacity: 0.9; }
-    100% { transform: translateY(-620px) scale(1.1); opacity: 0; }
-}
-
-/* =========================================================
    THEME TOGGLE BUTTON
    ========================================================= */
 .theme-toggle {
@@ -361,7 +266,6 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .orb, .particle { animation: none !important; }
     * { transition-duration: 0.01ms !important; }
 }
 
@@ -458,11 +362,8 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
             position: sticky;
             top: 5rem;
             z-index: 40;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.95);
             border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-            transition: background 0.5s ease, border-color 0.5s ease;
         }
 
         .btn-thick {
@@ -714,24 +615,321 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
     cursor: not-allowed;
 }
 
+/* =========================================================
+   PROFILE, SETTINGS, CHAT
+   ========================================================= */
+.profile-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #06b6d4);
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    cursor: pointer;
+    font-size: 15px;
+    user-select: none;
+}
 
+.profile-menu {
+    position: absolute;
+    top: 52px;
+    right: 0;
+    width: 230px;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.65);
+    overflow: hidden;
+    z-index: 80;
+}
 
+html[data-theme="light"] .profile-menu {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.12);
+}
+
+.profile-menu button,
+.profile-menu a {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 11px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: inherit;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.profile-menu button:hover,
+.profile-menu a:hover {
+    background: rgba(59, 130, 246, 0.14);
+}
+
+.icon-btn {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #93c5fd;
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(96, 165, 250, 0.55);
+}
+
+html[data-theme="light"] .icon-btn {
+    background: rgba(15, 23, 42, 0.05);
+    border-color: rgba(15, 23, 42, 0.12);
+    color: #2563eb;
+}
+
+#settingsModal.hidden,
+#chatPanel.hidden,
+#profileMenu.hidden {
+    display: none !important;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(2, 6, 23, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 680px;
+    max-height: 88vh;
+    overflow-y: auto;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    color: #e2e8f0;
+}
+
+html[data-theme="light"] .modal-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.12);
+    color: #1e293b;
+}
+
+.modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="light"] .modal-head {
+    border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+.modal-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.template-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    margin-bottom: 7px;
+    cursor: pointer;
+}
+
+.template-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+html[data-theme="light"] .template-item {
+    border-color: rgba(15, 23, 42, 0.08);
+}
+
+.template-item input {
+    width: 16px;
+    height: 16px;
+    accent-color: #3b82f6;
+}
+
+.chat-panel {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    width: 760px;
+    max-width: calc(100vw - 24px);
+    height: 540px;
+    max-height: calc(100vh - 40px);
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    box-shadow: 0 25px 60px -18px rgba(0, 0, 0, 0.8);
+    z-index: 95;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #e2e8f0;
+}
+
+html[data-theme="light"] .chat-panel {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.12);
+    color: #1e293b;
+}
+
+.chat-body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+}
+
+.chat-users {
+    width: 220px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+html[data-theme="light"] .chat-users {
+    border-right-color: rgba(15, 23, 42, 0.08);
+}
+
+.chat-user {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chat-user:hover,
+.chat-user.active {
+    background: rgba(59, 130, 246, 0.14);
+}
+
+.chat-user-info {
+    min-width: 0;
+}
+
+.chat-user-info p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 9999px;
+    background: #64748b;
+    flex-shrink: 0;
+}
+
+.status-dot.online {
+    background: #22c55e;
+}
+
+.chat-conv {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.msg {
+    max-width: 78%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.35;
+    word-wrap: break-word;
+}
+
+.msg .msg-meta {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 3px;
+}
+
+.msg.mine {
+    align-self: flex-end;
+    background: #2563eb;
+    color: #fff;
+    border-bottom-right-radius: 3px;
+}
+
+.msg.other {
+    align-self: flex-start;
+    background: rgba(148, 163, 184, 0.16);
+    border-bottom-left-radius: 3px;
+}
+
+html[data-theme="light"] .msg.other {
+    background: rgba(15, 23, 42, 0.08);
+}
+
+.chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="light"] .chat-input-row {
+    border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 640px) {
+    .chat-users {
+        width: 150px;
+    }
+    .chat-panel {
+        right: 8px;
+        bottom: 8px;
+        height: calc(100vh - 16px);
+    }
+}
 
     </style>
 </head>
 <body class="text-slate-200 min-h-screen">
 
-<!-- Ambient background -->
-<div class="ambient" aria-hidden="true">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    <div class="grid-overlay"></div>
-    <div class="noise"></div>
-    <div id="particles"></div>
-</div>
-
-<nav class="no-print border-b border-white/10 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 h-20">
+<nav class="no-print border-b border-white/10 bg-slate-900/90 sticky top-0 z-50 h-20">
     <div class="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
         <div class="flex items-center space-x-3">
             <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)]">
@@ -743,13 +941,13 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
             </div>
         </div>
 
-        <div class="flex items-center space-x-4 md:space-x-6">
-       
+        <div class="flex items-center space-x-3 md:space-x-4">
 
-            <div class="hidden md:block">
-                <p class="text-[10px] text-slate-500 uppercase tracking-widest text-right">Logged in as</p>
-                <p class="text-sm font-semibold text-white"><?php echo $employee_name; ?></p>
-            </div>
+            <button id="chatToggle" class="icon-btn" title="Messages" aria-label="Open messages">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8m-8 4h5m-9 6V7a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2H8l-5 4z"/>
+                </svg>
+            </button>
 
             <button id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark or light mode">
                 <svg class="icon-sun" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
@@ -760,7 +958,19 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
                 </svg>
             </button>
 
-            <a href="logout.php" class="px-5 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all duration-300 text-sm font-medium">Logout</a>
+            <div class="relative">
+                <button id="profileBtn" class="profile-btn" title="<?php echo htmlspecialchars($employee_name ?? ''); ?>">
+                    <?php echo strtoupper(substr(trim($employee_name ?? ''), 0, 1)); ?>
+                </button>
+                <div id="profileMenu" class="profile-menu hidden">
+                    <div class="px-4 py-3 border-b border-white/10">
+                        <p class="text-sm font-semibold"><?php echo htmlspecialchars($employee_name ?? ''); ?></p>
+                        <p class="text-[11px] opacity-60">@<?php echo htmlspecialchars($username); ?></p>
+                    </div>
+                    <button type="button" onclick="openSettings()">Settings</button>
+                    <a href="logout.php">Logout</a>
+                </div>
+            </div>
         </div>
     </div>
 </nav>
@@ -768,9 +978,13 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
 
     <div class="sticky-actions no-print mb-8">
         <div class="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-         
 
-   
+            <div class="flex items-center gap-3">
+                <label for="monthFilter" class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Month</label>
+                <select id="monthFilter" onchange="applyMonthFilter()" class="glass-input rounded-xl px-4 py-2.5 text-sm font-semibold bg-slate-800 text-white">
+                </select>
+            </div>
+
             <div class="flex items-center gap-4">
 
                    <button onclick="saveToDB()" class="btn-thick px-8 py-3 rounded-xl bg-blue-600 border-blue-700 border-b-blue-900 text-white font-bold shadow-[0_5px_15px_rgba(59,130,246,0.3)] hover:bg-blue-500 transition-all active:scale-95 flex items-center">
@@ -883,17 +1097,95 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
     <img src="footer.png" class="print-img-footer" alt="">
 </div>
 
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" class="modal-overlay hidden">
+    <div class="modal-card">
+        <div class="modal-head">
+            <div>
+                <h2 class="font-bold text-lg">Settings</h2>
+                <p class="text-[11px] opacity-60">Automatic daily tasks and copying from other users</p>
+            </div>
+            <button type="button" class="modal-close" onclick="closeSettings()">&times;</button>
+        </div>
 
+        <div class="p-5">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Auto-generate daily tasks</h3>
+            <p class="text-xs opacity-60 mb-3">Check the tasks you do regularly. They will be added automatically each new day.</p>
+            <div id="recentTasksList" class="max-h-64 overflow-y-auto pr-1">
+                <p class="text-sm opacity-60">Loading recent tasks...</p>
+            </div>
+        </div>
+
+        <div class="p-5 border-t border-white/10">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Copy tasks from another user</h3>
+            <p class="text-xs opacity-60 mb-3">Copy a single day or a whole month into your own report.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">User</label>
+                    <select id="copyUser" class="glass-input w-full rounded-lg px-3 py-2 text-sm"></select>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Copy</label>
+                    <select id="copyMode" onchange="toggleCopyMode()" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                        <option value="day">Daily tasks</option>
+                        <option value="month">Whole month</option>
+                    </select>
+                </div>
+                <div id="copyDateWrap">
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Date</label>
+                    <input type="date" id="copyDate" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                </div>
+                <div id="copyMonthWrap" class="hidden">
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Month</label>
+                    <input type="month" id="copyMonth" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                </div>
+            </div>
+
+            <button type="button" onclick="copyFromUser()" class="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Copy Tasks</button>
+        </div>
+    </div>
+</div>
+
+<!-- CHAT PANEL -->
+<div id="chatPanel" class="chat-panel hidden">
+    <div class="modal-head">
+        <div>
+            <h2 class="font-bold text-base">Messages</h2>
+            <p id="chatHeaderStatus" class="text-[11px] opacity-60">Everyone</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeChat()">&times;</button>
+    </div>
+
+    <div class="chat-body">
+        <div id="chatUserList" class="chat-users"></div>
+        <div class="chat-conv">
+            <div id="chatMessages" class="chat-messages"></div>
+            <form id="chatForm" class="chat-input-row" onsubmit="sendChat(event)">
+                <input id="chatInput" type="text" autocomplete="off" placeholder="Type a message..." class="glass-input flex-1 rounded-xl px-4 py-2 text-sm">
+                <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-sm">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script>
     // -----------------------------------------------------------------
     // 1. GLOBAL STATE & DATALISTS
     // -----------------------------------------------------------------
+    const CURRENT_USER = <?php echo json_encode($username); ?>;
+    const CURRENT_USER_NAME = <?php echo json_encode($employee_name); ?>;
+
     let history = JSON.parse(localStorage.getItem('krc_history')) || {
         tasks: [],
         times: ["4 hrs", "8 hrs", "2 hrs", "1 hr"],
         remarks: ["-DONE", "IN PROGRESS", "PENDING"]
     };
+
+    let allUsers = [];
+    let activeChat = '';
+    let chatPollTimer = null;
+    let recentTaskState = [];
 
     function updateDataLists() {
         let taskList = document.getElementById('history-tasks');
@@ -940,38 +1232,66 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
         });
     }
 
-    function initAmbience() {
-        const host = document.getElementById('particles');
-        if (!host) return;
-        for (let i = 0; i < 16; i++) {
-            const p = document.createElement('span');
-            p.className = 'particle';
-            p.style.left = Math.random() * 100 + '%';
-            p.style.bottom = '-20px';
-            p.style.animationDuration = (12 + Math.random() * 16) + 's';
-            p.style.animationDelay = (Math.random() * 16) + 's';
-            p.style.opacity = (0.2 + Math.random() * 0.55);
-            const s = 2 + Math.random() * 4;
-            p.style.width = s + 'px';
-            p.style.height = s + 'px';
-            host.appendChild(p);
-        }
-    }
-
     // -----------------------------------------------------------------
     // 2. LIFECYCLE & INITIALIZATION
     // -----------------------------------------------------------------
     window.onload = async function() {
         initTheme();
-        initAmbience();
+        initUiEvents();
         updateDataLists();
+
+        await sendHeartbeat();
         await loadFromDB();
 
         const savedView = localStorage.getItem('krc_view_pref');
         if (savedView === 'tiled') {
             document.getElementById('inputs').classList.add('view-grid');
         }
+
+        setInterval(async () => {
+            const generated = await sendHeartbeat();
+            if (generated > 0 && document.getElementById('chatPanel').classList.contains('hidden')) {
+                await loadFromDB();
+                notify(generated + ' daily task(s) added automatically', 'success');
+            }
+        }, 60000);
     };
+
+    function initUiEvents() {
+        const profileBtn = document.getElementById('profileBtn');
+        const profileMenu = document.getElementById('profileMenu');
+        if (profileBtn && profileMenu) {
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileMenu.classList.toggle('hidden');
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (profileMenu && !profileMenu.classList.contains('hidden') && !e.target.closest('#profileMenu') && e.target.id !== 'profileBtn') {
+                profileMenu.classList.add('hidden');
+            }
+        });
+
+        const chatToggle = document.getElementById('chatToggle');
+        if (chatToggle) chatToggle.addEventListener('click', openChat);
+
+        document.querySelectorAll('[id$="Modal"]').forEach((el) => {
+            el.addEventListener('click', (e) => {
+                if (e.target === el) closeSettings();
+            });
+        });
+    }
+
+    async function sendHeartbeat() {
+        try {
+            const r = await fetch('app_api.php?action=heartbeat', { method: 'POST' });
+            const d = await r.json();
+            return (d && d.status === 'ok') ? (parseInt(d.generated, 10) || 0) : 0;
+        } catch (e) {
+            return 0;
+        }
+    }
 
     function handleInput() { 
         renderTable(); 
@@ -1116,25 +1436,100 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
         return totalHours;
     }
 
-    function createNewDay() {
-        const blocks = document.querySelectorAll('.d-date');
-        let nextDate = "";
-        let latestDate = null;
+    // -----------------------------------------------------------------
+    // MONTH FILTER (current month + 6 recent months / data months)
+    // -----------------------------------------------------------------
+    function monthKeyOf(dateObj) {
+        return dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2, '0');
+    }
 
-        blocks.forEach(input => {
+    function monthLabel(key) {
+        const parts = key.split('-');
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+        return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    function populateMonthFilter() {
+        const select = document.getElementById('monthFilter');
+        if (!select) return;
+
+        const previous = select.value;
+        const dataKeys = [];
+        const keys = new Set();
+
+        document.querySelectorAll('.day-block .d-date').forEach(input => {
+            const d = new Date(input.value);
+            if (!isNaN(d.getTime())) {
+                const key = monthKeyOf(d);
+                if (!keys.has(key)) dataKeys.push(key);
+                keys.add(key);
+            }
+        });
+
+        const now = new Date();
+        for (let i = 0; i < 6; i++) {
+            keys.add(monthKeyOf(new Date(now.getFullYear(), now.getMonth() - i, 1)));
+        }
+
+        const sorted = Array.from(keys).sort().reverse();
+        select.innerHTML = sorted.map(k => `<option value="${k}">${monthLabel(k)}</option>`).join('');
+
+        if (previous && keys.has(previous)) {
+            select.value = previous;
+        } else if (dataKeys.length > 0) {
+            dataKeys.sort();
+            select.value = dataKeys[dataKeys.length - 1];
+        } else {
+            select.value = monthKeyOf(now);
+        }
+
+        applyMonthFilter();
+    }
+
+    function applyMonthFilter() {
+        const select = document.getElementById('monthFilter');
+        const value = select ? select.value : '';
+
+        document.querySelectorAll('.day-block').forEach(block => {
+            const d = new Date(block.querySelector('.d-date').value);
+            const key = isNaN(d.getTime()) ? '' : monthKeyOf(d);
+            block.style.display = (!value || key === value) ? '' : 'none';
+        });
+
+        renderTable();
+    }
+
+    function createNewDay() {
+        const filter = document.getElementById('monthFilter');
+        const selectedMonth = filter ? filter.value : '';
+        const visibleBlocks = Array.from(document.querySelectorAll('.day-block'))
+            .filter(b => b.style.display !== 'none');
+
+        let latestDate = null;
+        visibleBlocks.forEach(block => {
+            const input = block.querySelector('.d-date');
             const parsed = new Date(input.value);
             if (!isNaN(parsed.getTime()) && (!latestDate || parsed > latestDate)) {
                 latestDate = parsed;
             }
         });
 
+        let nextDate;
         if (latestDate) {
             latestDate.setDate(latestDate.getDate() + 1);
-            nextDate = latestDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+            nextDate = latestDate;
+        } else if (selectedMonth) {
+            const now = new Date();
+            const parts = selectedMonth.split('-');
+            const isCurrentMonth = now.getFullYear() === parseInt(parts[0], 10) && (now.getMonth() + 1) === parseInt(parts[1], 10);
+            nextDate = isCurrentMonth ? now : new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
         } else {
-            nextDate = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+            nextDate = new Date();
         }
-        addDay({ date: nextDate });
+
+        addDay({
+            date: nextDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+        });
     }
 
     function addDay(data = null) {
@@ -1447,6 +1842,8 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
         } catch (e) { 
             createNewDay(); 
         }
+
+        populateMonthFilter();
     }
 
     // -----------------------------------------------------------------
@@ -1457,11 +1854,12 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
         if (!output) return;
         output.innerHTML = '';
         
-        const blocks = document.querySelectorAll('.day-block');
+        const blocks = Array.from(document.querySelectorAll('.day-block'))
+            .filter(block => block.style.display !== 'none');
         
         if (blocks.length > 0) {
-            const dateInputs = Array.from(document.querySelectorAll('.d-date'))
-                .map(input => new Date(input.value))
+            const dateInputs = blocks
+                .map(block => new Date(block.querySelector('.d-date').value))
                 .filter(d => !isNaN(d.getTime()));
 
             if (dateInputs.length > 0) {
@@ -1532,6 +1930,402 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
                 output.appendChild(totalTr);
             }
         });
+    }
+
+    // -----------------------------------------------------------------
+    // 8. SETTINGS: AUTO DAILY TASKS + COPY FROM OTHER USERS
+    // -----------------------------------------------------------------
+    function escapeHtml(value) {
+        return String(value === null || value === undefined ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(value) {
+        return escapeHtml(value);
+    }
+
+    function openSettings() {
+        const menu = document.getElementById('profileMenu');
+        if (menu) menu.classList.add('hidden');
+
+        const modal = document.getElementById('settingsModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+
+        const now = new Date();
+        document.getElementById('copyDate').value = now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+            String(now.getDate()).padStart(2, '0');
+        document.getElementById('copyMonth').value = monthKeyOf(now);
+
+        loadSettings();
+        fillCopyUsers();
+    }
+
+    function closeSettings() {
+        const modal = document.getElementById('settingsModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    async function loadSettings() {
+        const host = document.getElementById('recentTasksList');
+        try {
+            const r = await fetch('app_api.php?action=settings');
+            const data = await r.json();
+
+            const seen = new Set();
+            recentTaskState = [];
+
+            (data.recent || []).forEach(item => {
+                if (!item.activity || seen.has(item.activity)) return;
+                seen.add(item.activity);
+                const tpl = (data.templates || []).find(t => t.activity === item.activity);
+                recentTaskState.push({
+                    activity: item.activity,
+                    start_time: tpl ? (tpl.start_time || '') : (item.start_time || ''),
+                    end_time: tpl ? (tpl.end_time || '') : (item.end_time || ''),
+                    remarks: tpl ? (tpl.remarks || '-DONE') : (item.remarks || '-DONE'),
+                    enabled: !!tpl
+                });
+            });
+
+            (data.templates || []).forEach(tpl => {
+                if (seen.has(tpl.activity)) return;
+                seen.add(tpl.activity);
+                recentTaskState.push({
+                    activity: tpl.activity,
+                    start_time: tpl.start_time || '',
+                    end_time: tpl.end_time || '',
+                    remarks: tpl.remarks || '-DONE',
+                    enabled: true
+                });
+            });
+
+            renderRecentTasks();
+        } catch (e) {
+            host.innerHTML = '<p class="text-sm text-red-400">Unable to load settings.</p>';
+        }
+    }
+
+    function renderRecentTasks() {
+        const host = document.getElementById('recentTasksList');
+        if (!recentTaskState.length) {
+            host.innerHTML = '<p class="text-sm opacity-60">No recent tasks yet. Add a task first.</p>';
+            return;
+        }
+
+        host.innerHTML = recentTaskState.map((item, index) => `
+            <label class="template-item">
+                <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="toggleTemplate(${index}, this.checked)">
+                <span class="flex-1 min-w-0">
+                    <span class="block text-xs font-semibold truncate">${escapeHtml(item.activity)}</span>
+                    <span class="block text-[10px] opacity-60">${escapeHtml(item.start_time || '4 hrs')} · ${escapeHtml(item.remarks || '-DONE')}</span>
+                </span>
+            </label>
+        `).join('');
+    }
+
+    function toggleTemplate(index, checked) {
+        if (!recentTaskState[index]) return;
+        recentTaskState[index].enabled = checked;
+        saveTemplates();
+    }
+
+    async function saveTemplates() {
+        const templates = recentTaskState
+            .filter(t => t.enabled)
+            .map(t => ({
+                activity: t.activity,
+                start_time: t.start_time,
+                end_time: t.end_time,
+                remarks: t.remarks
+            }));
+
+        try {
+            const r = await fetch('app_api.php?action=save_templates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ templates })
+            });
+            const data = await r.json();
+            if (data.status === 'ok') {
+                notify('Auto-task settings saved', 'success');
+                if (data.generated > 0) {
+                    await loadFromDB();
+                }
+            } else {
+                notify(data.message || 'Could not save settings', 'error');
+            }
+        } catch (e) {
+            notify('Network error', 'error');
+        }
+    }
+
+    function toggleCopyMode() {
+        const mode = document.getElementById('copyMode').value;
+        document.getElementById('copyDateWrap').classList.toggle('hidden', mode === 'month');
+        document.getElementById('copyMonthWrap').classList.toggle('hidden', mode !== 'month');
+    }
+
+    async function fetchUsers(force) {
+        if (allUsers.length && !force) return allUsers;
+        try {
+            const r = await fetch('app_api.php?action=users');
+            const data = await r.json();
+            allUsers = data.users || [];
+        } catch (e) {
+            allUsers = [];
+        }
+        return allUsers;
+    }
+
+    async function fillCopyUsers() {
+        const select = document.getElementById('copyUser');
+        if (!select) return;
+        const users = await fetchUsers();
+        const previous = select.value;
+        select.innerHTML = '<option value="">Select user...</option>' + users
+            .filter(u => u.username !== CURRENT_USER)
+            .map(u => `<option value="${escapeAttr(u.username)}">${escapeHtml(u.employee_name || u.username)}</option>`)
+            .join('');
+        if (previous) select.value = previous;
+    }
+
+    function mergeTasksIntoDay(dateStr, tasks) {
+        const target = Array.from(document.querySelectorAll('.day-block')).find(block =>
+            block.querySelector('.d-date').value.trim().toLowerCase() === String(dateStr).trim().toLowerCase()
+        );
+
+        if (!target) {
+            addDay({
+                date: dateStr,
+                tasks: tasks.map(t => t.desc || ''),
+                durations: tasks.map(t => t.start || '4 hrs'),
+                remarks: tasks.map(t => t.remarks || '-DONE')
+            });
+            return;
+        }
+
+        const taskList = target.querySelector('.task-list');
+        tasks.forEach(t => {
+            addTaskRowToElement(taskList, t.desc || '', t.start || '4 hrs', t.end || '', t.remarks || '-DONE');
+        });
+        handleInput();
+    }
+
+    async function copyFromUser() {
+        const username = document.getElementById('copyUser').value;
+        const mode = document.getElementById('copyMode').value;
+
+        if (!username) {
+            notify('Please select a user', 'error');
+            return;
+        }
+
+        const payload = { username, mode };
+        if (mode === 'month') {
+            payload.month = document.getElementById('copyMonth').value;
+            if (!payload.month) {
+                notify('Please select a month', 'error');
+                return;
+            }
+        } else {
+            payload.date = document.getElementById('copyDate').value;
+            if (!payload.date) {
+                notify('Please select a date', 'error');
+                return;
+            }
+        }
+
+        try {
+            const r = await fetch('app_api.php?action=copy_from_user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await r.json();
+
+            if (data.status !== 'ok') {
+                notify(data.message || 'Copy failed', 'error');
+                return;
+            }
+
+            let total = 0;
+            (data.groups || []).forEach(group => {
+                mergeTasksIntoDay(group.date, group.tasks || []);
+                total += (group.tasks || []).length;
+            });
+
+            if (total === 0) {
+                notify('No tasks found for that selection', 'error');
+                return;
+            }
+
+            await saveToDB();
+            populateMonthFilter();
+            closeSettings();
+            notify(total + ' task(s) copied', 'success');
+        } catch (e) {
+            notify('Network error', 'error');
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // 9. CHAT (EVERYONE + PRIVATE) WITH ONLINE STATUS
+    // -----------------------------------------------------------------
+    function isOnline(lastSeen) {
+        if (!lastSeen) return false;
+        const d = new Date(String(lastSeen).replace(' ', 'T'));
+        if (isNaN(d.getTime())) return false;
+        const diff = Date.now() - d.getTime();
+        return diff < 120000 && diff > -300000;
+    }
+
+    function formatLastSeen(lastSeen) {
+        if (!lastSeen) return 'Offline';
+        const d = new Date(String(lastSeen).replace(' ', 'T'));
+        if (isNaN(d.getTime())) return 'Offline';
+
+        let diff = Date.now() - d.getTime();
+        if (diff < 0) diff = 0;
+
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'Just now';
+        if (mins < 60) return mins + ' min ago';
+
+        const hours = Math.floor(mins / 60);
+        if (hours < 24) return hours + ' hour' + (hours > 1 ? 's' : '') + ' ago';
+
+        const days = Math.floor(hours / 24);
+        if (days < 30) return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+
+        const months = Math.floor(days / 30);
+        return months + ' month' + (months > 1 ? 's' : '') + ' ago';
+    }
+
+    function formatClock(value) {
+        const d = new Date(String(value).replace(' ', 'T'));
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    async function openChat() {
+        const panel = document.getElementById('chatPanel');
+        if (!panel) return;
+        panel.classList.remove('hidden');
+
+        await fetchUsers(true);
+        renderChatUsers();
+        await selectChat(activeChat, null);
+
+        if (chatPollTimer) clearInterval(chatPollTimer);
+        chatPollTimer = setInterval(async () => {
+            if (panel.classList.contains('hidden')) return;
+            await fetchUsers(true);
+            renderChatUsers();
+            await loadChatMessages();
+        }, 5000);
+    }
+
+    function closeChat() {
+        const panel = document.getElementById('chatPanel');
+        if (panel) panel.classList.add('hidden');
+        if (chatPollTimer) {
+            clearInterval(chatPollTimer);
+            chatPollTimer = null;
+        }
+    }
+
+    function renderChatUsers() {
+        const host = document.getElementById('chatUserList');
+        if (!host) return;
+
+        const entries = [{ username: '', employee_name: 'Everyone', group: true }]
+            .concat(allUsers.filter(u => u.username !== CURRENT_USER));
+
+        host.innerHTML = entries.map(u => {
+            const online = u.group ? false : isOnline(u.last_seen);
+            const status = u.group ? 'Group conversation' : (online ? 'Online' : formatLastSeen(u.last_seen));
+            const active = (activeChat || '') === (u.username || '');
+            return `
+                <div class="chat-user ${active ? 'active' : ''}" data-username="${escapeAttr(u.username)}" data-name="${escapeAttr(u.employee_name || u.username)}">
+                    <span class="status-dot ${online ? 'online' : ''}" ${u.group ? 'style="display:none"' : ''}></span>
+                    <div class="chat-user-info">
+                        <p class="text-xs font-semibold">${escapeHtml(u.employee_name || u.username)}</p>
+                        <p class="text-[10px] opacity-60">${escapeHtml(status)}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        host.querySelectorAll('.chat-user').forEach(el => {
+            el.addEventListener('click', () => selectChat(el.dataset.username, el.dataset.name));
+        });
+    }
+
+    async function selectChat(username, label) {
+        activeChat = username || '';
+        const header = document.getElementById('chatHeaderStatus');
+        if (header) {
+            header.textContent = activeChat === '' ? 'Everyone' : (label || activeChat);
+        }
+        renderChatUsers();
+        await loadChatMessages();
+    }
+
+    async function loadChatMessages() {
+        const box = document.getElementById('chatMessages');
+        if (!box) return;
+
+        try {
+            const r = await fetch('app_api.php?action=messages&with=' + encodeURIComponent(activeChat));
+            const data = await r.json();
+            const messages = data.messages || [];
+
+            if (!messages.length) {
+                box.innerHTML = '<p class="text-xs opacity-50 text-center mt-4">No messages yet. Say hello!</p>';
+                return;
+            }
+
+            box.innerHTML = messages.map(m => {
+                const mine = !!m.mine;
+                const name = mine ? 'You' : (m.employee_name || m.username);
+                return `
+                    <div class="msg ${mine ? 'mine' : 'other'}">
+                        <div>${escapeHtml(m.message)}</div>
+                        <div class="msg-meta">${escapeHtml(name)} · ${formatClock(m.created_at)}</div>
+                    </div>
+                `;
+            }).join('');
+
+            box.scrollTop = box.scrollHeight;
+        } catch (e) {
+            box.innerHTML = '<p class="text-xs text-red-400 text-center mt-4">Unable to load messages.</p>';
+        }
+    }
+
+    async function sendChat(event) {
+        event.preventDefault();
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        input.value = '';
+
+        try {
+            await fetch('app_api.php?action=send_message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, recipient: activeChat })
+            });
+            await loadChatMessages();
+        } catch (e) {
+            notify('Network error', 'error');
+        }
     }
 </script>
 
