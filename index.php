@@ -443,6 +443,7 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
     .styled-table {
         width: 100%;
         border-collapse: collapse !important;
+        table-layout: fixed;
         border: 1pt solid black !important; /* Thinner border for cleaner look */
         margin-top: 5px;
     }
@@ -1046,7 +1047,15 @@ html[data-theme="light"] .chat-input-row {
                             <tr>
                                 <th width="15%">Date</th>
                                 <th width="45%">Activity/Accomplishment</th>
-                                <th width="25%">Allotted Time</th>
+                                <th width="25%" style="padding:0 !important;">
+                                    <div style="padding:4px 2px;">Allotted Time</div>
+                                    <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                                        <tr>
+                                            <td style="width:50%;border:none !important;border-top:1pt solid #000 !important;border-right:2px solid #000 !important;text-align:center;padding:2px 3px !important;">AM</td>
+                                            <td style="width:50%;border:none !important;border-top:1pt solid #000 !important;text-align:center;padding:2px 3px !important;">PM</td>
+                                        </tr>
+                                    </table>
+                                </th>
                                 <th width="15%">Remarks</th>
                             </tr>
                         </thead>
@@ -1883,52 +1892,37 @@ html[data-theme="light"] .chat-input-row {
         blocks.forEach(block => {
             const dateValue = block.querySelector('.d-date').value;
             const taskRows = block.querySelectorAll('.task-row');
-            
-            let totalDayHours = 0;
-            // Total row increases rowspan count by 1
-            const totalRowsCount = taskRows.length + 1;
+            const rowCount = taskRows.length;
 
             taskRows.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                
+
                 let dateCell = "";
+                let timeCell = "";
                 if (index === 0) {
-                    dateCell = `<td rowspan="${totalRowsCount}" class="col-date text-center font-bold">${dateValue}</td>`;
+                    dateCell = `<td rowspan="${rowCount}" class="col-date text-center font-bold">${dateValue}</td>`;
+                    timeCell = `<td rowspan="${rowCount}" class="col-time text-center" style="padding:0 !important;position:relative;">
+                        <div style="position:absolute;left:50%;top:0;bottom:0;width:0;border-left:2px solid #000;"></div>
+                        <table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="width:50%;border:none !important;text-align:center;vertical-align:middle;padding:2px 3px !important;">4 hours</td>
+                                <td style="width:50%;border:none !important;text-align:center;vertical-align:middle;padding:2px 3px !important;">4 hours</td>
+                            </tr>
+                        </table>
+                    </td>`;
                 }
 
                 const desc = row.querySelector('.t-desc').value;
-                const duration = row.querySelector('.t-duration').value || "4 hrs";
                 let remark = row.querySelector('.t-remarks').value || "-DONE";
-
-                // Accumulate numerical total
-                totalDayHours += parseDurationToHours(duration);
 
                 tr.innerHTML = `
                     ${dateCell}
                     <td class="col-task">- ${desc}</td>
-                    <td class="col-time text-center">${duration}</td>
+                    ${timeCell}
                     <td class="col-rem text-center">${remark.toUpperCase()}</td>
                 `;
                 output.appendChild(tr);
             });
-
-            // Append "TOTAL" summary row for the day
-            if (taskRows.length > 0) {
-                const totalTr = document.createElement('tr');
-                totalTr.className = 'font-bold bg-slate-100/10';
-                
-                // Format display string
-                const displayTotal = (totalDayHours % 1 === 0) 
-                    ? `${totalDayHours} hrs` 
-                    : `${totalDayHours.toFixed(1)} hrs`;
-
-                totalTr.innerHTML = `
-                    <td class="col-task text-right font-extrabold pr-4 uppercase">TOTAL:</td>
-                    <td class="col-time text-center font-extrabold">${displayTotal}</td>
-                    <td class="col-rem text-center"></td>
-                `;
-                output.appendChild(totalTr);
-            }
         });
     }
 
