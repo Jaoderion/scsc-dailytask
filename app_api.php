@@ -51,6 +51,10 @@ switch ($action) {
         saveTemplates($conn, $me);
         break;
 
+    case 'save_generation':
+        saveGenerationSettings($conn, $me);
+        break;
+
     case 'copy_from_user':
         copyFromUser($conn, $me);
         break;
@@ -93,9 +97,15 @@ function ensureSchema($conn)
         `username` varchar(50) NOT NULL,
         `include_saturday` tinyint(1) NOT NULL DEFAULT 0,
         `include_sunday` tinyint(1) NOT NULL DEFAULT 0,
+        `generate_all_month` tinyint(1) NOT NULL DEFAULT 0,
         `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
         PRIMARY KEY (`username`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    $checkAllMonth = $conn->query("SHOW COLUMNS FROM `user_daily_settings` LIKE 'generate_all_month'");
+    if (!$checkAllMonth || $checkAllMonth->num_rows === 0) {
+        $conn->query("ALTER TABLE `user_daily_settings` ADD COLUMN `generate_all_month` tinyint(1) NOT NULL DEFAULT 0");
+    }
 
     $conn->query("CREATE TABLE IF NOT EXISTS `messages` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -283,11 +293,11 @@ function ensureWeekendPlaceholders($conn, $me)
 }
 
 /**
- * Applies the user's checked templates to every working day (Mon-Fri) of the
- * given YYYY-MM month. Weekends are skipped. Existing activities are never
- * duplicated, so manual edits are preserved.
+ * Applies the user's checked templates to every day of the given YYYY-MM month.
+ * Weekends are skipped unless $includeSaturday / $includeSunday is set. Existing
+ * activities are never duplicated, so manual edits are preserved.
  */
-function generateForMonthWorkingDays($conn, $me, $month)
+function generateForMonthWorkingDays($conn, $me, $month, $includeSaturday = 0, $includeSunday = 0)
 {
     if (!preg_match('/^(\d{4})-(\d{2})$/', (string)$month, $m)) {
         return 0;
@@ -315,16 +325,26 @@ function generateForMonthWorkingDays($conn, $me, $month)
     $daysInMonth = (int)date('t', mktime(0, 0, 0, $mon, 1, $year));
     $exists = $conn->prepare("SELECT 1 FROM accomplishments WHERE username = ? AND activity = ? AND STR_TO_DATE(report_date, '%b %d, %Y') = ? LIMIT 1");
     $ins = $conn->prepare("INSERT INTO accomplishments (username, report_date, activity, start_time, end_time, remarks) VALUES (?, ?, ?, ?, ?, ?)");
+    $delPlaceholder = $conn->prepare("DELETE FROM accomplishments WHERE username = ? AND report_date = ? AND activity IN ('Saturday', 'Sunday') AND COALESCE(start_time, '') = '' AND COALESCE(end_time, '') = ''");
     $added = 0;
 
     for ($day = 1; $day <= $daysInMonth; $day++) {
         $ts = mktime(0, 0, 0, $mon, $day, $year);
         $dow = (int)date('w', $ts);
-        if ($dow === 0 || $dow === 6) {
+        if ($dow === 6 && !$includeSaturday) {
+            continue;
+        }
+        if ($dow === 0 && !$includeSunday) {
             continue;
         }
         $display = date('M d, Y', $ts);
         $dateKey = date('Y-m-d', $ts);
+
+        // A weekend that is now included should not keep its empty placeholder.
+        if ($dow === 0 || $dow === 6) {
+            $delPlaceholder->bind_param('ss', $me, $display);
+            $delPlaceholder->execute();
+        }
 
         foreach ($templates as $tpl) {
             $activity = $tpl['activity'];
@@ -348,6 +368,7 @@ function generateForMonthWorkingDays($conn, $me, $month)
 
     $exists->close();
     $ins->close();
+    $delPlaceholder->close();
     return $added;
 }
 
@@ -560,8 +581,8 @@ function getSettings($conn, $me)
     }
     $stmt->close();
 
-    $settings = ['include_saturday' => 0, 'include_sunday' => 0];
-    $stmt = $conn->prepare("SELECT include_saturday, include_sunday FROM user_daily_settings WHERE username = ?");
+    $settings = ['include_saturday' => 0, 'include_sunday' => 0, 'generate_all_month' => 0];
+    $stmt = $conn->prepare("SELECT include_saturday, include_sunday, generate_all_month FROM user_daily_settings WHERE username = ?");
     $stmt->bind_param('s', $me);
     $stmt->execute();
     $res = $stmt->get_result();
@@ -612,9 +633,54 @@ function saveTemplates($conn, $me)
         $month = date('Y-m');
     }
 
+    $includeSaturday = 0;
+    $includeSunday = 0;
+    $gs = $conn->prepare("SELECT include_saturday, include_sunday FROM user_daily_settings WHERE username = ?");
+    $gs->bind_param('s', $me);
+    $gs->execute();
+    $gsr = $gs->get_result();
+    if ($gsrow = $gsr->fetch_assoc()) {
+        $includeSaturday = (int)$gsrow['include_saturday'];
+        $includeSunday = (int)$gsrow['include_sunday'];
+    }
+    $gs->close();
+
     $added = generateForToday($conn, $me);
-    $added += generateForMonthWorkingDays($conn, $me, $month);
+    $added += generateForMonthWorkingDays($conn, $me, $month, $includeSaturday, $includeSunday);
     jout(['status' => 'ok', 'generated' => $added]);
+}
+
+/**
+ * Persists the "Generate all month task" toggle plus the weekend scope, and
+ * immediately fills the selected month when the toggle is enabled.
+ */
+function saveGenerationSettings($conn, $me)
+{
+    $data = body();
+    $allMonth = !empty($data['generate_all_month']) ? 1 : 0;
+    $includeSaturday = !empty($data['include_saturday']) ? 1 : 0;
+    $includeSunday = !empty($data['include_sunday']) ? 1 : 0;
+    $month = isset($data['month']) ? trim($data['month']) : '';
+    if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+        $month = date('Y-m');
+    }
+
+    $stmt = $conn->prepare("INSERT INTO user_daily_settings (username, include_saturday, include_sunday, generate_all_month) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE include_saturday = VALUES(include_saturday), include_sunday = VALUES(include_sunday), generate_all_month = VALUES(generate_all_month)");
+    $stmt->bind_param('siii', $me, $includeSaturday, $includeSunday, $allMonth);
+    $stmt->execute();
+    $stmt->close();
+
+    $added = 0;
+    if ($allMonth) {
+        $added += generateForMonthWorkingDays($conn, $me, $month, $includeSaturday, $includeSunday);
+        $added += ensureWeekendPlaceholders($conn, $me);
+    }
+
+    jout(['status' => 'ok', 'generated' => $added, 'settings' => [
+        'generate_all_month' => $allMonth,
+        'include_saturday' => $includeSaturday,
+        'include_sunday' => $includeSunday
+    ]]);
 }
 
 function copyFromUser($conn, $me)

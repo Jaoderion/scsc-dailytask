@@ -752,6 +752,35 @@ html[data-theme="light"] .template-item {
     accent-color: #3b82f6;
 }
 
+.settings-section-toggle {
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    transition: background-color 0.2s ease;
+}
+
+.settings-section-toggle:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.settings-section-toggle .settings-chevron {
+    transition: transform 0.25s ease;
+}
+
+.settings-section-toggle[aria-expanded="true"] .settings-chevron {
+    transform: rotate(180deg);
+}
+
+.settings-section-body {
+    animation: settingsFlyDown 0.22s ease;
+}
+
+@keyframes settingsFlyDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .chat-panel {
     position: fixed;
     right: 22px;
@@ -1091,97 +1120,185 @@ html[data-theme="light"] .chat-input-row {
             <button type="button" class="modal-close" onclick="closeSettings()">&times;</button>
         </div>
 
-        <div class="p-5">
-            <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Account details</h3>
-            <p class="text-xs opacity-60 mb-3">Update the information from your registration form, username, and password.</p>
+        <div class="settings-section">
+            <button type="button" class="settings-section-toggle w-full flex items-center justify-between gap-4 px-5 py-4 text-left" aria-expanded="false" onclick="toggleSettingsSection(this)">
+                <div>
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Account details</h3>
+                    <p class="text-xs opacity-60">Update the information from your registration form, username, and password.</p>
+                </div>
+                <span class="settings-chevron text-slate-400 text-sm">&#9660;</span>
+            </button>
+            <div class="settings-section-body hidden px-5 pb-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Full Name</label>
+                        <input type="text" id="acctEmployeeName" class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Full name">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Username</label>
+                        <input type="text" id="acctUsername" class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Username">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">New Password</label>
+                        <input type="password" id="acctPassword" class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Leave blank to keep current password" autocomplete="new-password">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Prepared By - Name</label>
+                        <input type="text" id="acctStaffName" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Prepared By - Title</label>
+                        <input type="text" id="acctStaffPosition" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Noted By - Name</label>
+                        <input type="text" id="acctHeadName" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Noted By - Title</label>
+                        <input type="text" id="acctHeadTitle" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Reviewed &amp; Approved - Name</label>
+                        <input type="text" id="acctAdminName" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Reviewed &amp; Approved - Title</label>
+                        <input type="text" id="acctAdminTitle" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Department / Unit</label>
+                        <input type="text" id="acctDepartment" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+                </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Full Name</label>
-                    <input type="text" id="acctEmployeeName" class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Full name">
-                </div>
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Username</label>
-                    <input type="text" id="acctUsername" class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Username">
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">New Password</label>
-                    <input type="password" id="acctPassword" class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Leave blank to keep current password" autocomplete="new-password">
-                </div>
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Prepared By - Name</label>
-                    <input type="text" id="acctStaffName" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Prepared By - Title</label>
-                    <input type="text" id="acctStaffPosition" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Noted By - Name</label>
-                    <input type="text" id="acctHeadName" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Noted By - Title</label>
-                    <input type="text" id="acctHeadTitle" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Reviewed &amp; Approved - Name</label>
-                    <input type="text" id="acctAdminName" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Reviewed &amp; Approved - Title</label>
-                    <input type="text" id="acctAdminTitle" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Department / Unit</label>
-                    <input type="text" id="acctDepartment" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
-                </div>
-            </div>
-
-            <button type="button" onclick="saveAccount()" class="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Save Account</button>
-        </div>
-
-        <div class="p-5 border-t border-white/10">
-            <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Auto-generate daily tasks</h3>
-            <p class="text-xs opacity-60 mb-3">Check the tasks you do regularly. Saving applies them to every working day (Monday&ndash;Friday) of the selected month; Saturday and Sunday are skipped.</p>
-            <div id="recentTasksList" class="max-h-64 overflow-y-auto pr-1">
-                <p class="text-sm opacity-60">Loading recent tasks...</p>
+                <button type="button" onclick="saveAccount()" class="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Save Account</button>
             </div>
         </div>
 
-        <div class="p-5 border-t border-white/10">
-            <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Copy tasks from another user</h3>
-            <p class="text-xs opacity-60 mb-3">Copy a single day or a whole month into your own report.</p>
+        <div class="settings-section border-t border-white/10">
+            <button type="button" class="settings-section-toggle w-full flex items-center justify-between gap-4 px-5 py-4 text-left" aria-expanded="false" onclick="toggleSettingsSection(this)">
+                <div>
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Styles</h3>
+                    <p class="text-xs opacity-60">Choose how accomplishment details are aligned, then assign it to specific dates or repeating weekdays.</p>
+                </div>
+                <span class="settings-chevron text-slate-400 text-sm">&#9660;</span>
+            </button>
+            <div class="settings-section-body hidden px-5 pb-5">
+                <div class="rounded-2xl bg-slate-800/40 border border-white/5 p-3 mb-3">
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-2">Alignment</label>
+                    <div id="styleAlignControl" class="flex items-center gap-1 p-1 rounded-xl bg-slate-900/60 border border-white/10">
+                        <button type="button" data-align="left" onclick="setStyleAlign('left')" class="style-align-btn flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all">Left</button>
+                        <button type="button" data-align="center" onclick="setStyleAlign('center')" class="style-align-btn flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all">Center</button>
+                        <button type="button" data-align="right" onclick="setStyleAlign('right')" class="style-align-btn flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all">Right</button>
+                    </div>
+                </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">User</label>
-                    <select id="copyUser" class="glass-input w-full rounded-lg px-3 py-2 text-sm"></select>
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                    <button type="button" id="styleModeDateBtn" onclick="setStyleMode('date')" class="px-3 py-2 rounded-lg text-xs font-bold border transition-all">Assign by specific date</button>
+                    <button type="button" id="styleModeWeekdayBtn" onclick="setStyleMode('weekday')" class="px-3 py-2 rounded-lg text-xs font-bold border transition-all">Assign Monday to Sunday</button>
                 </div>
-                <div>
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Copy</label>
-                    <select id="copyMode" onchange="toggleCopyMode()" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
-                        <option value="day">Daily tasks</option>
-                        <option value="month">Whole month</option>
-                    </select>
+
+                <div id="styleDateWrap">
+                    <div class="flex items-center justify-between mb-2 gap-3">
+                        <label class="block text-[10px] uppercase font-bold opacity-60">Month</label>
+                        <input type="month" id="styleMonth" onchange="renderStyleDates()" class="glass-input rounded-lg px-3 py-1.5 text-xs">
+                    </div>
+                    <div id="styleDateList" class="grid grid-cols-2 sm:grid-cols-4 gap-1 max-h-52 overflow-y-auto pr-1"></div>
+                    <p class="text-[10px] opacity-50 mt-2">Checked dates use the selected alignment. A specific date overrides the weekday rule.</p>
                 </div>
-                <div id="copyDateWrap">
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Date</label>
-                    <input type="date" id="copyDate" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div id="copyMonthWrap" class="hidden">
-                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Month</label>
-                    <input type="month" id="copyMonth" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+
+                <div id="styleWeekdayWrap" class="hidden">
+                    <div id="styleWeekdayList" class="grid grid-cols-2 sm:grid-cols-4 gap-1"></div>
+                    <p class="text-[10px] opacity-50 mt-2">Checked weekdays repeat the selected alignment on every matching date.</p>
                 </div>
             </div>
-
-            <button type="button" onclick="copyFromUser()" class="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Copy Tasks</button>
         </div>
 
-        <div class="p-5 border-t border-white/10">
-            <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Download report</h3>
-            <p class="text-xs opacity-60 mb-3">Export your accomplishment report as a Microsoft Word (.doc) file you can edit and print.</p>
-            <button type="button" onclick="exportToWord()" id="exportWordBtn" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Export Word (.doc)</button>
+        <div class="settings-section border-t border-white/10">
+            <button type="button" class="settings-section-toggle w-full flex items-center justify-between gap-4 px-5 py-4 text-left" aria-expanded="false" onclick="toggleSettingsSection(this)">
+                <div>
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Auto-generate daily tasks</h3>
+                    <p class="text-xs opacity-60">Check the tasks you do regularly. Saving applies them to every working day (Monday&ndash;Friday) of the selected month; Saturday and Sunday are skipped.</p>
+                </div>
+                <span class="settings-chevron text-slate-400 text-sm">&#9660;</span>
+            </button>
+            <div class="settings-section-body hidden px-5 pb-5">
+                <label class="flex items-start justify-between gap-3 p-3 rounded-xl bg-slate-800/40 border border-white/5 mb-3 cursor-pointer">
+                    <span class="block">
+                        <span class="block text-xs font-bold">Generate all month task</span>
+                        <span class="block text-[10px] opacity-60 mt-0.5">When on, saving fills every date of the selected month with your checked tasks. Saturday and Sunday stay empty unless included below.</span>
+                    </span>
+                    <input type="checkbox" id="genAllMonth" onchange="saveGenerationSettings()" class="mt-1 w-4 h-4 accent-blue-500 shrink-0">
+                </label>
+
+                <div class="flex flex-wrap items-center gap-3 mb-3 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="genIncludeSaturday" onchange="saveGenerationSettings()" class="w-4 h-4 accent-blue-500">
+                        Include Saturday
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="genIncludeSunday" onchange="saveGenerationSettings()" class="w-4 h-4 accent-blue-500">
+                        Include Sunday
+                    </label>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <span class="text-[10px] uppercase font-bold opacity-60">Month</span>
+                        <input type="month" id="genMonth" onchange="saveGenerationSettings()" class="glass-input rounded-lg px-2 py-1">
+                    </div>
+                </div>
+
+                <div id="recentTasksList" class="max-h-64 overflow-y-auto pr-1">
+                    <p class="text-sm opacity-60">Loading recent tasks...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section border-t border-white/10">
+            <button type="button" class="settings-section-toggle w-full flex items-center justify-between gap-4 px-5 py-4 text-left" aria-expanded="false" onclick="toggleSettingsSection(this)">
+                <div>
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Copy tasks from another user</h3>
+                    <p class="text-xs opacity-60">Copy a single day or a whole month into your own report.</p>
+                </div>
+                <span class="settings-chevron text-slate-400 text-sm">&#9660;</span>
+            </button>
+            <div class="settings-section-body hidden px-5 pb-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">User</label>
+                        <select id="copyUser" class="glass-input w-full rounded-lg px-3 py-2 text-sm"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Copy</label>
+                        <select id="copyMode" onchange="toggleCopyMode()" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                            <option value="day">Daily tasks</option>
+                            <option value="month">Whole month</option>
+                        </select>
+                    </div>
+                    <div id="copyDateWrap">
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Date</label>
+                        <input type="date" id="copyDate" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div id="copyMonthWrap" class="hidden">
+                        <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Month</label>
+                        <input type="month" id="copyMonth" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                    </div>
+                </div>
+
+                <button type="button" onclick="copyFromUser()" class="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Copy Tasks</button>
+            </div>
+        </div>
+
+        <div class="settings-section border-t border-white/10">
+            <button type="button" class="settings-section-toggle w-full flex items-center justify-between gap-4 px-5 py-4 text-left" aria-expanded="false" onclick="toggleSettingsSection(this)">
+                <div>
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Download report</h3>
+                    <p class="text-xs opacity-60">Export your accomplishment report as a Microsoft Word (.doc) file you can edit and print.</p>
+                </div>
+                <span class="settings-chevron text-slate-400 text-sm">&#9660;</span>
+            </button>
+            <div class="settings-section-body hidden px-5 pb-5">
+                <button type="button" onclick="exportToWord()" id="exportWordBtn" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Export Word (.doc)</button>
+            </div>
         </div>
     </div>
 </div>
@@ -1224,6 +1341,7 @@ html[data-theme="light"] .chat-input-row {
     let activeChat = '';
     let chatPollTimer = null;
     let recentTaskState = [];
+    let generationSettings = { generate_all_month: 0, include_saturday: 0, include_sunday: 0 };
 
     function updateDataLists() {
         let taskList = document.getElementById('history-tasks');
@@ -1277,6 +1395,7 @@ html[data-theme="light"] .chat-input-row {
         initTheme();
         initUiEvents();
         updateDataLists();
+        loadStyleState();
 
         await sendHeartbeat();
         await loadFromDB();
@@ -1365,6 +1484,150 @@ html[data-theme="light"] .chat-input-row {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 500);
         }, 4000);
+    }
+
+    // -----------------------------------------------------------------
+    // 2b. STYLES: ACCOMPLISHMENT DETAIL ALIGNMENT (LEFT / CENTER / RIGHT)
+    // -----------------------------------------------------------------
+    let styleState = { align: 'left', mode: 'date', dates: {}, weekdays: {} };
+
+    function pad2(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    function isoFromDate(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
+
+    function loadStyleState() {
+        try {
+            const raw = localStorage.getItem('krc_styles');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                styleState = {
+                    align: ['left', 'center', 'right'].includes(parsed.align) ? parsed.align : 'left',
+                    mode: parsed.mode === 'weekday' ? 'weekday' : 'date',
+                    dates: (parsed.dates && typeof parsed.dates === 'object') ? parsed.dates : {},
+                    weekdays: (parsed.weekdays && typeof parsed.weekdays === 'object') ? parsed.weekdays : {}
+                };
+            }
+        } catch (e) {}
+        applyStyleUi();
+    }
+
+    function saveStyleState() {
+        try { localStorage.setItem('krc_styles', JSON.stringify(styleState)); } catch (e) {}
+    }
+
+    function applyStyleUi() {
+        document.querySelectorAll('#styleAlignControl [data-align]').forEach(btn => {
+            const active = btn.dataset.align === styleState.align;
+            btn.classList.toggle('bg-blue-600', active);
+            btn.classList.toggle('text-white', active);
+            btn.classList.toggle('text-slate-400', !active);
+            btn.classList.toggle('hover:text-white', !active);
+        });
+
+        const isDate = styleState.mode !== 'weekday';
+        const dateBtn = document.getElementById('styleModeDateBtn');
+        const wdBtn = document.getElementById('styleModeWeekdayBtn');
+        if (dateBtn) dateBtn.className = `px-3 py-2 rounded-lg text-xs font-bold border transition-all ${isDate ? 'bg-blue-600 border-blue-600 text-white' : 'border-white/10 text-slate-400 hover:text-white'}`;
+        if (wdBtn) wdBtn.className = `px-3 py-2 rounded-lg text-xs font-bold border transition-all ${!isDate ? 'bg-blue-600 border-blue-600 text-white' : 'border-white/10 text-slate-400 hover:text-white'}`;
+
+        const dateWrap = document.getElementById('styleDateWrap');
+        const wdWrap = document.getElementById('styleWeekdayWrap');
+        if (dateWrap) dateWrap.classList.toggle('hidden', !isDate);
+        if (wdWrap) wdWrap.classList.toggle('hidden', isDate);
+    }
+
+    function setStyleAlign(align) {
+        if (!['left', 'center', 'right'].includes(align)) return;
+        styleState.align = align;
+        saveStyleState();
+        applyStyleUi();
+        renderStyleDates();
+        renderStyleWeekdays();
+        renderTable();
+    }
+
+    function setStyleMode(mode) {
+        styleState.mode = mode === 'weekday' ? 'weekday' : 'date';
+        saveStyleState();
+        applyStyleUi();
+    }
+
+    function renderStyleDates() {
+        const list = document.getElementById('styleDateList');
+        const monthInput = document.getElementById('styleMonth');
+        if (!list || !monthInput) return;
+
+        const monthKey = monthInput.value || monthKeyOf(new Date());
+        const parts = monthKey.split('-');
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (!y || !m) { list.innerHTML = ''; return; }
+
+        const last = new Date(y, m, 0).getDate();
+        let html = '';
+        for (let day = 1; day <= last; day++) {
+            const dt = new Date(y, m - 1, day);
+            const iso = isoFromDate(dt);
+            const assigned = styleState.dates[iso] || '';
+            const checked = assigned === styleState.align;
+            html += `<label class="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-slate-800/40 border border-white/5 text-xs cursor-pointer hover:bg-slate-800/70 transition-colors">
+                <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleStyleDate('${iso}', this.checked)" class="accent-blue-500">
+                <span>${dt.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}</span>
+                <span class="ml-auto text-[9px] uppercase font-bold opacity-50">${assigned ? assigned.charAt(0) : dt.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+            </label>`;
+        }
+        list.innerHTML = html;
+    }
+
+    function toggleStyleDate(iso, checked) {
+        if (checked) styleState.dates[iso] = styleState.align;
+        else if (styleState.dates[iso] === styleState.align) delete styleState.dates[iso];
+        saveStyleState();
+        renderStyleDates();
+        renderTable();
+    }
+
+    function renderStyleWeekdays() {
+        const list = document.getElementById('styleWeekdayList');
+        if (!list) return;
+
+        const order = [1, 2, 3, 4, 5, 6, 0];
+        let html = '';
+        order.forEach(wd => {
+            const name = new Date(2024, 0, 7 + wd).toLocaleDateString('en-US', { weekday: 'long' });
+            const assigned = styleState.weekdays[String(wd)] || '';
+            const checked = assigned === styleState.align;
+            html += `<label class="flex items-center gap-2 px-2 py-2 rounded-lg bg-slate-800/40 border border-white/5 text-xs cursor-pointer hover:bg-slate-800/70 transition-colors">
+                <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleStyleWeekday('${wd}', this.checked)" class="accent-blue-500">
+                <span>${name}</span>
+                <span class="ml-auto text-[9px] uppercase font-bold opacity-50">${assigned || ''}</span>
+            </label>`;
+        });
+        list.innerHTML = html;
+    }
+
+    function toggleStyleWeekday(wd, checked) {
+        if (checked) styleState.weekdays[String(wd)] = styleState.align;
+        else if (styleState.weekdays[String(wd)] === styleState.align) delete styleState.weekdays[String(wd)];
+        saveStyleState();
+        renderStyleWeekdays();
+        renderTable();
+    }
+
+    // Specific date assignment wins over the repeating weekday assignment.
+    function resolveAlignForDate(dateValue) {
+        const d = new Date(dateValue);
+        if (!isNaN(d.getTime())) {
+            const iso = isoFromDate(d);
+            if (styleState.dates[iso]) return styleState.dates[iso];
+            const wd = styleState.weekdays[String(d.getDay())];
+            if (wd) return wd;
+        }
+        return 'left';
     }
 
     // -----------------------------------------------------------------
@@ -1954,9 +2217,11 @@ html[data-theme="light"] .chat-input-row {
             const taskRows = Array.from(block.querySelectorAll('.task-row'));
             if (taskRows.length === 0) return;
 
+            const rowAlign = resolveAlignForDate(dateValue);
+            const liStyle = rowAlign === 'left' ? '' : ' style="padding-left:0;text-indent:0;"';
             const tasksHtml = taskRows.map(row => {
                 const desc = row.querySelector('.t-desc').value.trim();
-                return `<li>• ${escapeHtml(desc)}</li>`;
+                return `<li${liStyle}>• ${escapeHtml(desc)}</li>`;
             }).join('');
 
             const parsedDate = new Date(dateValue);
@@ -1979,7 +2244,7 @@ html[data-theme="light"] .chat-input-row {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="col-date text-center font-bold">${escapeHtml(dateValue)}</td>
-                <td class="col-task"><ul class="print-task-list">${tasksHtml}</ul></td>
+                <td class="col-task" style="text-align:${rowAlign};"><ul class="print-task-list">${tasksHtml}</ul></td>
                 <td class="col-time text-center" style="padding:0 !important;position:relative;">
                     <div style="position:absolute;left:50%;top:0;bottom:0;width:0;border-left:2px solid #000;"></div>
                     <table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;">
@@ -2150,6 +2415,23 @@ ${reportContent}
         return escapeHtml(value);
     }
 
+    function toggleSettingsSection(btn) {
+        if (!btn) return;
+        const body = btn.nextElementSibling;
+        if (!body) return;
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!expanded));
+        body.classList.toggle('hidden', expanded);
+    }
+
+    function collapseSettingsSections() {
+        document.querySelectorAll('#settingsModal .settings-section-toggle').forEach(btn => {
+            btn.setAttribute('aria-expanded', 'false');
+            const body = btn.nextElementSibling;
+            if (body) body.classList.add('hidden');
+        });
+    }
+
     function openSettings() {
         const menu = document.getElementById('profileMenu');
         if (menu) menu.classList.add('hidden');
@@ -2157,12 +2439,22 @@ ${reportContent}
         const modal = document.getElementById('settingsModal');
         if (!modal) return;
         modal.classList.remove('hidden');
+        collapseSettingsSections();
 
         const now = new Date();
         document.getElementById('copyDate').value = now.getFullYear() + '-' +
             String(now.getMonth() + 1).padStart(2, '0') + '-' +
             String(now.getDate()).padStart(2, '0');
         document.getElementById('copyMonth').value = monthKeyOf(now);
+
+        const styleMonth = document.getElementById('styleMonth');
+        const monthFilter = document.getElementById('monthFilter');
+        if (styleMonth) styleMonth.value = (monthFilter && monthFilter.value) ? monthFilter.value : monthKeyOf(now);
+        const genMonth = document.getElementById('genMonth');
+        if (genMonth) genMonth.value = (monthFilter && monthFilter.value) ? monthFilter.value : monthKeyOf(now);
+        applyStyleUi();
+        renderStyleDates();
+        renderStyleWeekdays();
 
         loadAccount();
         loadSettings();
@@ -2275,6 +2567,7 @@ ${reportContent}
             });
 
             renderRecentTasks();
+            applyGenerationSettings(data.settings || {});
         } catch (e) {
             host.innerHTML = '<p class="text-sm text-red-400">Unable to load settings.</p>';
         }
@@ -2328,6 +2621,67 @@ ${reportContent}
                 notify('Auto-task settings saved', 'success');
                 if (data.generated > 0) {
                     await loadFromDB();
+                }
+            } else {
+                notify(data.message || 'Could not save settings', 'error');
+            }
+        } catch (e) {
+            notify('Network error', 'error');
+        }
+    }
+
+    function applyGenerationSettings(settings) {
+        generationSettings = {
+            generate_all_month: settings && settings.generate_all_month ? 1 : 0,
+            include_saturday: settings && settings.include_saturday ? 1 : 0,
+            include_sunday: settings && settings.include_sunday ? 1 : 0
+        };
+
+        const all = document.getElementById('genAllMonth');
+        if (all) all.checked = !!generationSettings.generate_all_month;
+        const sat = document.getElementById('genIncludeSaturday');
+        if (sat) sat.checked = !!generationSettings.include_saturday;
+        const sun = document.getElementById('genIncludeSunday');
+        if (sun) sun.checked = !!generationSettings.include_sunday;
+
+        const monthEl = document.getElementById('genMonth');
+        if (monthEl && !monthEl.value) {
+            const mf = document.getElementById('monthFilter');
+            monthEl.value = (mf && mf.value) ? mf.value : monthKeyOf(new Date());
+        }
+    }
+
+    async function saveGenerationSettings() {
+        const all = document.getElementById('genAllMonth');
+        const sat = document.getElementById('genIncludeSaturday');
+        const sun = document.getElementById('genIncludeSunday');
+        const monthEl = document.getElementById('genMonth');
+        const monthFilter = document.getElementById('monthFilter');
+        const month = (monthEl && monthEl.value)
+            || (monthFilter && monthFilter.value)
+            || monthKeyOf(new Date());
+
+        const payload = {
+            generate_all_month: !!(all && all.checked),
+            include_saturday: !!(sat && sat.checked),
+            include_sunday: !!(sun && sun.checked),
+            month
+        };
+
+        try {
+            const r = await fetch('app_api.php?action=save_generation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await r.json();
+            if (data.status === 'ok') {
+                applyGenerationSettings(data.settings || payload);
+                if (data.generated > 0) {
+                    notify(data.generated + ' task(s) generated for ' + month, 'success');
+                    await loadFromDB();
+                } else {
+                    notify('Generation settings saved', 'success');
                 }
             } else {
                 notify(data.message || 'Could not save settings', 'error');
