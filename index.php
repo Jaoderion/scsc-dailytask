@@ -992,8 +992,8 @@ html[data-theme="light"] .chat-input-row {
                   Save
                 </button>
 
-                <button onclick="window.print()" class="btn-thick px-8 py-3 rounded-xl bg-blue-600 border-blue-700 border-b-blue-900 text-white font-bold shadow-[0_5px_15px_rgba(59,130,246,0.3)] hover:bg-blue-500 transition-all active:scale-95 flex items-center">
-                    Print
+                <button onclick="exportToWord()" id="exportWordBtn" class="btn-thick px-8 py-3 rounded-xl bg-blue-600 border-blue-700 border-b-blue-900 text-white font-bold shadow-[0_5px_15px_rgba(59,130,246,0.3)] hover:bg-blue-500 transition-all active:scale-95 flex items-center">
+                    Export Word
                 </button>
 
 
@@ -1152,6 +1152,12 @@ html[data-theme="light"] .chat-input-row {
             </div>
 
             <button type="button" onclick="copyFromUser()" class="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Copy Tasks</button>
+        </div>
+
+        <div class="p-5 border-t border-white/10">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Download report</h3>
+            <p class="text-xs opacity-60 mb-3">Export your accomplishment report as a Microsoft Word (.doc) file you can edit and print.</p>
+            <button type="button" onclick="exportToWord()" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Download Word (.doc)</button>
         </div>
     </div>
 </div>
@@ -1924,6 +1930,149 @@ html[data-theme="light"] .chat-input-row {
                 output.appendChild(tr);
             });
         });
+    }
+
+    // -----------------------------------------------------------------
+    // 7b. EXPORT REPORT AS MICROSOFT WORD (.doc)
+    // -----------------------------------------------------------------
+    function imageToDataURL(src) {
+        return fetch(src, { cache: 'force-cache' })
+            .then(res => res.blob())
+            .then(blob => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            }))
+            .catch(() => src);
+    }
+
+    async function exportToWord() {
+        const btn = document.getElementById('exportWordBtn');
+        if (btn) btn.disabled = true;
+
+        try {
+            renderTable();
+
+            const preview = document.getElementById('report-preview');
+            if (!preview) return;
+
+            const clone = preview.cloneNode(true);
+
+            const headerData = await imageToDataURL('header.png');
+            const footerData = await imageToDataURL('footer.png');
+
+            const outerThead = clone.querySelector(':scope > thead');
+            if (outerThead) outerThead.remove();
+            const outerTfoot = clone.querySelector(':scope > tfoot');
+            if (outerTfoot) outerTfoot.remove();
+
+            clone.querySelectorAll('.signatory-section > .flex').forEach(row => {
+                const cols = Array.from(row.children);
+                const tbl = document.createElement('table');
+                tbl.setAttribute('width', '100%');
+                tbl.setAttribute('style', 'width:100%;border-collapse:collapse;margin-bottom:24px;');
+                const tr = document.createElement('tr');
+                cols.forEach(col => {
+                    const td = document.createElement('td');
+                    td.setAttribute('width', '50%');
+                    td.setAttribute('style', 'width:50%;text-align:center;vertical-align:top;padding:0 10px;');
+                    td.innerHTML = col.innerHTML;
+                    tr.appendChild(td);
+                });
+                tbl.appendChild(tr);
+                row.replaceWith(tbl);
+            });
+
+            const contentCell = clone.querySelector('tbody > tr > td');
+            const reportContent = contentCell ? contentCell.innerHTML : clone.innerHTML;
+
+            const periodEl = clone.querySelector('#print-period');
+            const periodText = periodEl ? periodEl.textContent.trim() : '';
+            const fileLabel = periodText.replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'Report';
+
+            const wordStyles = `
+                @page WordSection1 {
+                    size: 8.5in 11in;
+                    margin: 2.15in 0.4in 0.98in 0.4in;
+                    mso-header-margin: 0.4in;
+                    mso-footer-margin: 0.35in;
+                    mso-header: h1;
+                    mso-footer: f1;
+                }
+                div.WordSection1 { page: WordSection1; }
+                body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; }
+                p.MsoHeader, p.MsoFooter { margin: 0; padding: 0; }
+                table { border-collapse: collapse; }
+                #report-preview { width: 100%; }
+                .print-img-header, .print-img-footer { width: 100%; display: block; }
+                .report-header-text h3 { font-size: 11pt; font-weight: bold; text-decoration: underline; text-transform: uppercase; }
+                .styled-table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1pt solid #000; margin-top: 5px; }
+                .styled-table th { background-color: #f2f2f2; border: 1pt solid #000; padding: 4px 2px; font-size: 9pt; font-weight: bold; text-align: center; text-transform: uppercase; }
+                .styled-table td { border: 1pt solid #000; padding: 2px 4px; vertical-align: middle; line-height: 1.15; }
+                .styled-table td table td { border: 1pt solid #000; }
+                .col-date { text-align: center; font-weight: bold; width: 12%; font-size: 8.5pt; }
+                .col-task { text-align: left; width: 50%; }
+                .col-time { text-align: center; width: 23%; font-size: 8.5pt; }
+                .col-rem { text-align: center; font-weight: bold; width: 15%; font-size: 8.5pt; }
+                .text-center { text-align: center; }
+                .text-left { text-align: left; }
+                .font-bold { font-weight: bold; }
+                .underline { text-decoration: underline; }
+                .uppercase { text-transform: uppercase; }
+                .inline-block { display: inline-block; }
+                .border-b { border-bottom: 1pt solid #000; }
+                .mt-1 { margin-top: 4px; }
+                .mt-4 { margin-top: 12px; }
+                .mt-10 { margin-top: 24px; }
+                .mt-12 { margin-top: 28px; }
+                .mb-4 { margin-bottom: 12px; }
+                .mb-10 { margin-bottom: 24px; }
+                .mb-12 { margin-bottom: 28px; }
+                .mb-14 { margin-bottom: 40px; }
+                .p-2 { padding: 6px; }
+                .signatory-section { page-break-inside: avoid; }
+                .signatory-section td { page-break-inside: avoid; }
+                .footer-spacer { height: 18px; }
+            `;
+
+            const html = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Accomplishment Report</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>${wordStyles}</style>
+</head>
+<body>
+<div class="WordSection1">
+${reportContent}
+</div>
+<div style="mso-element:header" id="h1">
+<p class="MsoHeader" style="margin:0;text-align:center;"><img src="${headerData}" style="width:7.7in;height:1.75in;" alt="Header"></p>
+</div>
+<div style="mso-element:footer" id="f1">
+<p class="MsoFooter" style="margin:0;text-align:center;"><img src="${footerData}" style="width:7.7in;height:0.63in;" alt="Footer"></p>
+</div>
+</body>
+</html>`;
+
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Accomplishment_Report_${fileLabel}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+            notify('Word document downloaded', 'success');
+        } catch (e) {
+            notify('Could not export Word document', 'error');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
     }
 
     // -----------------------------------------------------------------
