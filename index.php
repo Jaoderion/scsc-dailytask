@@ -1640,17 +1640,23 @@ html[data-theme="light"] .chat-input-row {
 
         if (isTiled) {
             const blocks = document.querySelectorAll('.day-block');
-            const summaryData = Array.from(blocks).map((block, index) => ({
-                date: block.querySelector('.d-date').value || "No Date",
-                tasks: block.querySelectorAll('.task-row').length,
-                index: index
-            }));
+            const summaryData = Array.from(blocks).map((block, index) => {
+                const dateValue = block.querySelector('.d-date').value || "No Date";
+                const parsed = new Date(dateValue);
+                return {
+                    date: dateValue,
+                    weekday: isNaN(parsed.getTime()) ? '' : parsed.toLocaleDateString('en-US', { weekday: 'long' }),
+                    tasks: block.querySelectorAll('.task-row').length,
+                    index: index
+                };
+            });
 
             container.setAttribute('data-original-html', container.innerHTML);
             container.innerHTML = summaryData.map(data => `
                 <div onclick="jumpToDate(${data.index})" class="bg-slate-900/80 border border-blue-500/30 p-6 rounded-2xl hover:border-blue-500 hover:bg-blue-500/10 transition-all cursor-pointer flex flex-col items-center justify-center text-center shadow-lg group">
                     <div class="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-1 group-hover:text-blue-300">Entry Date</div>
                     <div class="text-white font-bold text-lg">${data.date}</div>
+                    ${data.weekday ? `<div class="text-blue-300 text-[10px] font-bold uppercase tracking-widest mt-1">${data.weekday}</div>` : ''}
                     <div class="mt-2 px-3 py-1 bg-blue-500/20 rounded-full text-[10px] text-blue-300 font-bold uppercase">${data.tasks} Activities</div>
                 </div>
             `).join('');
@@ -1803,6 +1809,17 @@ html[data-theme="light"] .chat-input-row {
         document.querySelectorAll('.day-block').forEach(applyDayTimeDefaults);
     }
 
+    function updateDayWeekday(input) {
+        const block = input ? input.closest('.day-block') : null;
+        if (!block) return;
+        const label = block.querySelector('.day-weekday');
+        if (!label) return;
+        const d = new Date(input.value);
+        label.textContent = isNaN(d.getTime())
+            ? ''
+            : d.toLocaleDateString('en-US', { weekday: 'long' });
+    }
+
     function addDay(data = null) {
         const container = document.getElementById('inputs');
         const dayDiv = document.createElement('div');
@@ -1842,8 +1859,11 @@ html[data-theme="light"] .chat-input-row {
 
                 <div class="flex flex-wrap items-center gap-4 sm:gap-8 flex-1">
                     <div class="min-w-[140px]">
-                        <label class="block text-[10px] uppercase font-bold text-blue-400 tracking-widest mb-1">Entry Date</label>
-                        <input type="text" class="d-date bg-transparent text-white font-bold border-none p-0 focus:ring-0 text-lg w-full" value="${defaultDate}" oninput="handleInput()" onchange="applyDayTimeDefaults(this.closest('.day-block')); handleInput()">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <label class="block text-[10px] uppercase font-bold text-blue-400 tracking-widest">Entry Date</label>
+                            <span class="day-weekday text-[10px] uppercase font-bold text-blue-300 tracking-widest"></span>
+                        </div>
+                        <input type="text" class="d-date bg-transparent text-white font-bold border-none p-0 focus:ring-0 text-lg w-full" value="${defaultDate}" oninput="updateDayWeekday(this); handleInput()" onchange="applyDayTimeDefaults(this.closest('.day-block')); updateDayWeekday(this); handleInput()">
                     </div>
                     
                     <div class="h-8 w-[1px] bg-white/10 hidden md:block"></div>
@@ -1895,6 +1915,7 @@ html[data-theme="light"] .chat-input-row {
         dayDiv.querySelector('.d-pm').value = dayPm;
         dayDiv.querySelector('.d-remarks').value = dayRemarks;
         tasks.forEach(t => addTaskRowToElement(taskList, t));
+        updateDayWeekday(dayDiv.querySelector('.d-date'));
         container.appendChild(dayDiv);
         handleInput();
         refreshOrderButtons();
@@ -2219,10 +2240,6 @@ html[data-theme="light"] .chat-input-row {
 
             const rowAlign = resolveAlignForDate(dateValue);
             const liStyle = rowAlign === 'left' ? '' : ' style="padding-left:0;text-indent:0;"';
-            const tasksHtml = taskRows.map(row => {
-                const desc = row.querySelector('.t-desc').value.trim();
-                return `<li${liStyle}>• ${escapeHtml(desc)}</li>`;
-            }).join('');
 
             const parsedDate = new Date(dateValue);
             const isWeekendDay = !isNaN(parsedDate.getTime())
@@ -2235,6 +2252,14 @@ html[data-theme="light"] .chat-input-row {
                 if (!pm) pm = '4 hours';
             }
             const remark = block.querySelector('.d-remarks').value.trim();
+
+            // Empty days (no AM, PM, or remarks) are plain labels like "Sunday".
+            const noBullet = !am && !pm && !remark;
+            const tasksHtml = taskRows.map(row => {
+                const desc = row.querySelector('.t-desc').value.trim();
+                return `<li${liStyle}>${noBullet ? '' : '• '}${escapeHtml(desc)}</li>`;
+            }).join('');
+
             const timeRowsHtml = `<tr>
                 <td style="width:50%;border:none !important;text-align:center;vertical-align:middle;padding:2px 3px !important;">${escapeHtml(am)}</td>
                 <td style="width:50%;border:none !important;text-align:center;vertical-align:middle;padding:2px 3px !important;">${escapeHtml(pm)}</td>
