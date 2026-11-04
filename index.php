@@ -1026,7 +1026,7 @@ html[data-theme="light"] .chat-input-row {
                             <div class="w-1/2 text-center">
                                 <p class="mb-14">Prepared by:</p>
                                 <div class="inline-block text-center">
-                                    <p class="font-bold underline uppercase"><?php echo $staff_name; ?></p>
+                                    <p class="font-bold underline"><?php echo $staff_name; ?></p>
                                     <p><?php echo $staff_position; ?></p>
                                 </div>
                             </div>
@@ -1034,7 +1034,7 @@ html[data-theme="light"] .chat-input-row {
                             <div class="w-1/2 text-center">
                                 <p class="mb-14">Noted by:</p>
                                 <div class="inline-block text-center">
-                                    <p class="font-bold underline uppercase"><?php echo $head_name; ?></p>
+                                    <p class="font-bold underline"><?php echo $head_name; ?></p>
                                     <p><?php echo $head_title; ?></p>
                                 </div>
                             </div>
@@ -1043,7 +1043,7 @@ html[data-theme="light"] .chat-input-row {
                         <div class="mt-10 text-center" style="page-break-inside: avoid; break-inside: avoid;">
                             <p class="mb-14">Reviewed and Approved:</p>
                             <div class="inline-block text-center">
-                                <p class="font-bold underline uppercase"><?php echo $administrative_name; ?></p>
+                                <p class="font-bold underline"><?php echo $administrative_name; ?></p>
                                 <p><?php echo $administrative_title; ?></p>
                             </div>
                         </div>
@@ -2003,7 +2003,6 @@ html[data-theme="light"] .chat-input-row {
                 .text-left { text-align: left; }
                 .font-bold { font-weight: bold; }
                 .underline { text-decoration: underline; }
-                .uppercase { text-transform: uppercase; }
                 .inline-block { display: inline-block; }
                 .border-b { border-bottom: 1pt solid #000; }
                 .mt-1 { margin-top: 4px; }
