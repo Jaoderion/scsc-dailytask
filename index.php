@@ -431,6 +431,20 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
     .col-time { text-align: center; width: 23%; white-space: nowrap; font-size: 8.5pt; }
     .col-rem  { text-align: center; font-weight: bold; width: 15%; font-size: 8.5pt; }
 
+    .print-task-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .print-task-list li {
+        padding-left: 12px;
+        text-indent: -12px;
+    }
+
+    .print-remark-list { display: block; }
+    .print-remark-line { line-height: 1.15; }
+
     .print-img-header, .print-img-footer {
         width: 100%;
         display: block;
@@ -502,7 +516,9 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
 }
 
 #inputs.view-grid .t-desc, 
-#inputs.view-grid .t-remarks {
+#inputs.view-grid .d-am,
+#inputs.view-grid .d-pm,
+#inputs.view-grid .d-remarks {
     font-size: 10px !important;
     padding: 4px 8px !important;
     height: auto !important;
@@ -992,7 +1008,7 @@ html[data-theme="light"] .chat-input-row {
                     
                     <div class="text-center mt-4">
                         <h3 class="font-bold border-b border-black inline-block px-4">ACCOMPLISHMENT REPORT</h3>
-                        <p class="text-sm mt-1">Period Covered: <span id="print-period" class="font-bold"></span></p>
+                        <p class="text-sm mt-1">Covered Period: <span id="print-period" class="font-bold"></span></p>
                     </div>
 
                     <div class="mt-4 mb-4 text-sm">
@@ -1041,7 +1057,7 @@ html[data-theme="light"] .chat-input-row {
                         </div>
 
                         <div class="mt-10 text-center" style="page-break-inside: avoid; break-inside: avoid;">
-                            <p class="mb-14">Review and Evaluated:</p>
+                            <p class="mb-14">Review and Evaluated by:</p>
                             <div class="inline-block text-center">
                                 <p class="font-bold underline"><?php echo $administrative_name; ?></p>
                                 <p><?php echo $administrative_title; ?></p>
@@ -1127,7 +1143,7 @@ html[data-theme="light"] .chat-input-row {
 
         <div class="p-5 border-t border-white/10">
             <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Auto-generate daily tasks</h3>
-            <p class="text-xs opacity-60 mb-3">Check the tasks you do regularly. They will be added automatically each new day.</p>
+            <p class="text-xs opacity-60 mb-3">Check the tasks you do regularly. Saving applies them to every working day (Monday&ndash;Friday) of the selected month; Saturday and Sunday are skipped.</p>
             <div id="recentTasksList" class="max-h-64 overflow-y-auto pr-1">
                 <p class="text-sm opacity-60">Loading recent tasks...</p>
             </div>
@@ -1200,7 +1216,7 @@ html[data-theme="light"] .chat-input-row {
 
     let history = JSON.parse(localStorage.getItem('krc_history')) || {
         tasks: [],
-        times: ["4 hrs", "8 hrs", "2 hrs", "1 hr"],
+        times: ["4 hours", "8 hours", "2 hours", "1 hour"],
         remarks: ["-DONE", "IN PROGRESS", "PENDING"]
     };
 
@@ -1402,42 +1418,7 @@ html[data-theme="light"] .chat-input-row {
     }
 
     // -----------------------------------------------------------------
-    // 4. DAY & TASK ROW GENERATION + DURATION PARSING
-    // -----------------------------------------------------------------
-    function calculateDuration(startTimeStr, endTimeStr) {
-        if (!startTimeStr || !endTimeStr) return "";
-
-        const parseTime = (timeStr) => {
-            const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-            if (!match) return null;
-            let hours = parseInt(match[1]);
-            const minutes = parseInt(match[2]);
-            const ampm = match[3].toUpperCase();
-
-            if (ampm === "PM" && hours < 12) hours += 12;
-            if (ampm === "AM" && hours === 12) hours = 0;
-
-            return hours * 60 + minutes;
-        };
-
-        const startMin = parseTime(startTimeStr);
-        const endMin = parseTime(endTimeStr);
-
-        if (startMin === null || endMin === null) return startTimeStr;
-
-        let diffMin = endMin - startMin;
-        if (diffMin < 0) diffMin += 24 * 60;
-
-        const hours = Math.floor(diffMin / 60);
-        const mins = diffMin % 60;
-
-        let result = "";
-        if (hours > 0) result += `${hours} hr${hours > 1 ? 's' : ''}`;
-        if (mins > 0) result += `${hours > 0 ? ' ' : ''}${mins} min${mins > 1 ? 's' : ''}`;
-
-        return result || "0 hrs";
-    }
-
+    // 4. DAY & TASK ROW GENERATION
     // -----------------------------------------------------------------
     // MONTH FILTER (current month + 6 recent months / data months)
     // -----------------------------------------------------------------
@@ -1534,6 +1515,31 @@ html[data-theme="light"] .chat-input-row {
         });
     }
 
+    function isWeekendDateValue(dateStr) {
+        const d = new Date(dateStr);
+        return !isNaN(d.getTime()) && (d.getDay() === 0 || d.getDay() === 6);
+    }
+
+    function normalizeDayTime(value, isWeekend) {
+        const v = String(value == null ? '' : value).trim();
+        const autoFour = /^4\s*(hrs?|hours?)$/i.test(v);
+        if (isWeekend) return autoFour ? '' : v;
+        return (!v || autoFour) ? '4 hours' : v;
+    }
+
+    function applyDayTimeDefaults(block) {
+        if (!block) return;
+        const weekend = isWeekendDateValue(block.querySelector('.d-date').value);
+        const am = block.querySelector('.d-am');
+        const pm = block.querySelector('.d-pm');
+        if (am) am.value = normalizeDayTime(am.value, weekend);
+        if (pm) pm.value = normalizeDayTime(pm.value, weekend);
+    }
+
+    function applyAllDayTimeDefaults() {
+        document.querySelectorAll('.day-block').forEach(applyDayTimeDefaults);
+    }
+
     function addDay(data = null) {
         const container = document.getElementById('inputs');
         const dayDiv = document.createElement('div');
@@ -1541,8 +1547,24 @@ html[data-theme="light"] .chat-input-row {
         
         const defaultDate = (data && data.date) ? data.date : "";
         const tasks = (data && data.tasks) ? data.tasks : [""];
-        const durations = (data && data.durations) ? data.durations : (data && data.starts ? data.starts : ["4 hrs"]);
-        const remarks = (data && data.remarks) ? data.remarks : ["-DONE"];
+        const parsedDefaultDate = new Date(defaultDate);
+        const isWeekend = !isNaN(parsedDefaultDate.getTime())
+            && (parsedDefaultDate.getDay() === 0 || parsedDefaultDate.getDay() === 6);
+        const fallbackTime = isWeekend ? '' : '4 hours';
+        let dayAm = fallbackTime;
+        let dayPm = fallbackTime;
+        let dayRemarks = isWeekend ? '' : '-DONE';
+        if (data) {
+            if (Array.isArray(data.ams)) dayAm = normalizeDayTime(data.ams[0], isWeekend);
+            else if (Array.isArray(data.durations)) dayAm = normalizeDayTime(data.durations[0], isWeekend);
+            else if (data.am != null) dayAm = normalizeDayTime(data.am, isWeekend);
+
+            if (Array.isArray(data.pms)) dayPm = normalizeDayTime(data.pms[0], isWeekend);
+            else if (data.pm != null) dayPm = normalizeDayTime(data.pm, isWeekend);
+
+            if (Array.isArray(data.remarks)) dayRemarks = data.remarks[0] ?? '';
+            else if (data.remarks != null) dayRemarks = data.remarks;
+        }
 
         dayDiv.innerHTML = `
         <div class="px-6 py-5 bg-white/5 border-b border-white/5 flex flex-wrap items-center justify-between gap-4">
@@ -1558,7 +1580,7 @@ html[data-theme="light"] .chat-input-row {
                 <div class="flex flex-wrap items-center gap-4 sm:gap-8 flex-1">
                     <div class="min-w-[140px]">
                         <label class="block text-[10px] uppercase font-bold text-blue-400 tracking-widest mb-1">Entry Date</label>
-                        <input type="text" class="d-date bg-transparent text-white font-bold border-none p-0 focus:ring-0 text-lg w-full" value="${defaultDate}" oninput="handleInput()">
+                        <input type="text" class="d-date bg-transparent text-white font-bold border-none p-0 focus:ring-0 text-lg w-full" value="${defaultDate}" oninput="handleInput()" onchange="applyDayTimeDefaults(this.closest('.day-block')); handleInput()">
                     </div>
                     
                     <div class="h-8 w-[1px] bg-white/10 hidden md:block"></div>
@@ -1581,6 +1603,23 @@ html[data-theme="light"] .chat-input-row {
             </div>
         </div>
         <div class="p-6">
+            <div class="day-meta grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 p-3 rounded-2xl bg-slate-800/30 border border-white/5">
+                <div>
+                    <label class="block text-[9px] uppercase font-bold text-blue-400 tracking-widest mb-1 text-center">AM</label>
+                    <input type="text" list="history-times" placeholder="AM" 
+                        class="d-am glass-input w-full px-4 py-2 rounded-xl text-sm text-center text-white placeholder-slate-500" oninput="handleInput()">
+                </div>
+                <div>
+                    <label class="block text-[9px] uppercase font-bold text-blue-400 tracking-widest mb-1 text-center">PM</label>
+                    <input type="text" list="history-times" placeholder="PM" 
+                        class="d-pm glass-input w-full px-4 py-2 rounded-xl text-sm text-center text-white placeholder-slate-500" oninput="handleInput()">
+                </div>
+                <div>
+                    <label class="block text-[9px] uppercase font-bold text-blue-400 tracking-widest mb-1 text-center">Remarks</label>
+                    <input type="text" list="history-remarks" placeholder="Remarks" 
+                        class="d-remarks glass-input w-full px-4 py-2 rounded-xl text-sm text-center text-white placeholder-slate-500" oninput="handleInput()">
+                </div>
+            </div>
             <div class="task-list space-y-4"></div>
             <button onclick="addTaskRow(this)" class="mt-4 text-sm font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2">
                 <span class="flex items-center justify-center w-5 h-5 rounded-full border-2 border-blue-400 text-xs">+</span> Add Row
@@ -1589,30 +1628,23 @@ html[data-theme="light"] .chat-input-row {
         `;
 
         const taskList = dayDiv.querySelector('.task-list');
-        tasks.forEach((t, i) => addTaskRowToElement(taskList, t, durations[i] || "4 hrs", "", remarks[i]));
+        dayDiv.querySelector('.d-am').value = dayAm;
+        dayDiv.querySelector('.d-pm').value = dayPm;
+        dayDiv.querySelector('.d-remarks').value = dayRemarks;
+        tasks.forEach(t => addTaskRowToElement(taskList, t));
         container.appendChild(dayDiv);
         handleInput();
         refreshOrderButtons();
     }
 
-    function addTaskRowToElement(container, task = "", start = "4 hrs", end = "", remarks = "-DONE") {
+    function addTaskRowToElement(container, task = "") {
         const row = document.createElement('div');
         row.className = 'task-row flex flex-col md:flex-row gap-3 items-center bg-slate-800/40 p-3 rounded-2xl border border-white/5';
-
-        const durationVal = (start && end) ? calculateDuration(start, end) : (start || "4 hrs");
 
         row.innerHTML = `
             <div class="flex-1 w-full">
                 <input type="text" list="history-tasks" placeholder="Activity / Task description..." value="${task}" 
                     class="t-desc glass-input w-full px-4 py-2 rounded-xl text-sm text-white placeholder-slate-500" oninput="handleInput()">
-            </div>
-            <div class="w-full md:w-36">
-                <input type="text" list="history-times" placeholder="Duration (e.g. 4 hrs)" value="${durationVal}" 
-                    class="t-duration glass-input w-full px-4 py-2 rounded-xl text-sm text-center text-white placeholder-slate-500" oninput="handleInput()">
-            </div>
-            <div class="w-full md:w-32">
-                <input type="text" list="history-remarks" placeholder="Remarks" value="${remarks}" 
-                    class="t-remarks glass-input w-full px-4 py-2 rounded-xl text-sm text-center text-white placeholder-slate-500" oninput="handleInput()">
             </div>
             <button onclick="this.closest('.task-row').remove(); handleInput();" 
                 class="text-slate-500 hover:text-red-400 p-2 transition-colors">✕</button>
@@ -1622,7 +1654,7 @@ html[data-theme="light"] .chat-input-row {
 
     function addTaskRow(btn) {
         const taskList = btn.previousElementSibling;
-        addTaskRowToElement(taskList, "", "4 hrs", "", "-DONE");
+        addTaskRowToElement(taskList, "");
         handleInput();
     }
 
@@ -1760,14 +1792,11 @@ html[data-theme="light"] .chat-input-row {
         if (sourceBlock && sourceBlock !== targetBlock) {
             const taskList = targetBlock.querySelector('.task-list');
             taskList.innerHTML = '';
+            targetBlock.querySelector('.d-am').value = sourceBlock.querySelector('.d-am').value;
+            targetBlock.querySelector('.d-pm').value = sourceBlock.querySelector('.d-pm').value;
+            targetBlock.querySelector('.d-remarks').value = sourceBlock.querySelector('.d-remarks').value;
             sourceBlock.querySelectorAll('.task-row').forEach(row => {
-                addTaskRowToElement(
-                    taskList, 
-                    row.querySelector('.t-desc').value, 
-                    row.querySelector('.t-duration').value, 
-                    "",
-                    row.querySelector('.t-remarks').value
-                );
+                addTaskRowToElement(taskList, row.querySelector('.t-desc').value);
             });
             handleInput();
         }
@@ -1780,13 +1809,16 @@ html[data-theme="light"] .chat-input-row {
         const data = [];
         document.querySelectorAll('.day-block').forEach(block => {
             const date = block.querySelector('.d-date').value;
+            const start = block.querySelector('.d-am').value;
+            const end = block.querySelector('.d-pm').value;
+            const remarks = block.querySelector('.d-remarks').value;
             block.querySelectorAll('.task-row').forEach(row => {
                 data.push({
                     date: date,
                     desc: row.querySelector('.t-desc').value,
-                    start: row.querySelector('.t-duration').value,
-                    end: "",
-                    remarks: row.querySelector('.t-remarks').value
+                    start: start,
+                    end: end,
+                    remarks: remarks
                 });
             });
         });
@@ -1816,17 +1848,21 @@ html[data-theme="light"] .chat-input-row {
                 savedData.forEach(curr => {
                     const last = groups[groups.length - 1];
                     if (!last || last.date !== curr.report_date) {
-                        groups.push({ date: curr.report_date, tasks: [], durations: [], remarks: [] });
+                        groups.push({ date: curr.report_date, tasks: [], ams: [], pms: [], remarks: [] });
                     }
                     const group = groups[groups.length - 1];
 
                     group.tasks.push(curr.activity);
 
-                    const durationVal = (curr.start_time && curr.end_time)
-                        ? calculateDuration(curr.start_time, curr.end_time)
-                        : (curr.start_time || "4 hrs");
+                    const rowDate = new Date(curr.report_date);
+                    const isWeekendDay = !isNaN(rowDate.getTime())
+                        && (rowDate.getDay() === 0 || rowDate.getDay() === 6);
 
-                    group.durations.push(durationVal);
+                    const am = normalizeDayTime(curr.start_time, isWeekendDay);
+                    const pm = normalizeDayTime(curr.end_time, isWeekendDay);
+
+                    group.ams.push(am);
+                    group.pms.push(pm);
                     group.remarks.push(curr.remarks || "");
                 });
 
@@ -1834,7 +1870,8 @@ html[data-theme="light"] .chat-input-row {
                     addDay({
                         date: group.date,
                         tasks: group.tasks,
-                        durations: group.durations,
+                        ams: group.ams,
+                        pms: group.pms,
                         remarks: group.remarks
                     });
                 });
@@ -1845,7 +1882,35 @@ html[data-theme="light"] .chat-input-row {
             createNewDay(); 
         }
 
+        applyAllDayTimeDefaults();
+        handleInput();
+        arrangeDayBlocksByDate();
         populateMonthFilter();
+    }
+
+    // Arrange every day block by date number so the whole month is in order.
+    function arrangeDayBlocksByDate() {
+        const container = document.getElementById('inputs');
+        if (!container) return;
+
+        const parseBlockDate = block => {
+            const input = block.querySelector('.d-date');
+            const d = input ? new Date(input.value) : new Date(NaN);
+            return isNaN(d.getTime()) ? null : d;
+        };
+
+        const blocks = Array.from(container.querySelectorAll('.day-block'));
+
+        blocks.sort((a, b) => {
+            const da = parseBlockDate(a);
+            const db = parseBlockDate(b);
+            if (da && db) return da - db;
+            if (da) return -1;
+            if (db) return 1;
+            return 0;
+        });
+
+        blocks.forEach(block => container.appendChild(block));
     }
 
     // -----------------------------------------------------------------
@@ -1868,54 +1933,62 @@ html[data-theme="light"] .chat-input-row {
                 dateInputs.sort((a, b) => a - b);
                 const firstDate = dateInputs[0];
                 const lastDate = dateInputs[dateInputs.length - 1];
-                const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-                const monthStr = monthNames[lastDate.getMonth()];
-                const yearNum = lastDate.getFullYear();
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const startMonth = monthNames[firstDate.getMonth()];
+                const endMonth = monthNames[lastDate.getMonth()];
+                const startYear = firstDate.getFullYear();
+                const endYear = lastDate.getFullYear();
                 const startDay = String(firstDate.getDate()).padStart(2, '0');
-                const absoluteLastDay = new Date(yearNum, lastDate.getMonth() + 1, 0).getDate();
+                const absoluteLastDay = new Date(endYear, lastDate.getMonth() + 1, 0).getDate();
                 const endDay = String(absoluteLastDay).padStart(2, '0');
 
                 const printPeriod = document.getElementById('print-period');
                 if (printPeriod) {
-                    printPeriod.textContent = `${monthStr} ${startDay}-${endDay}, ${yearNum}`;
+                    printPeriod.textContent = `${startMonth} ${startDay}, ${startYear} - ${endMonth} ${endDay}, ${endYear}`;
                 }
             }
         }
 
         blocks.forEach(block => {
             const dateValue = block.querySelector('.d-date').value;
-            const taskRows = block.querySelectorAll('.task-row');
-            const rowCount = taskRows.length;
+            const taskRows = Array.from(block.querySelectorAll('.task-row'));
+            if (taskRows.length === 0) return;
 
-            taskRows.forEach((row, index) => {
-                const tr = document.createElement('tr');
+            const tasksHtml = taskRows.map(row => {
+                const desc = row.querySelector('.t-desc').value.trim();
+                return `<li>• ${escapeHtml(desc)}</li>`;
+            }).join('');
 
-                let dateCell = "";
-                let timeCell = "";
-                if (index === 0) {
-                    dateCell = `<td rowspan="${rowCount}" class="col-date text-center font-bold">${dateValue}</td>`;
-                    timeCell = `<td rowspan="${rowCount}" class="col-time text-center" style="padding:0 !important;position:relative;">
-                        <div style="position:absolute;left:50%;top:0;bottom:0;width:0;border-left:2px solid #000;"></div>
-                        <table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;">
-                            <tr>
-                                <td style="width:50%;border:none !important;text-align:center;vertical-align:middle;padding:2px 3px !important;">4 hours</td>
-                                <td style="width:50%;border:none !important;text-align:center;vertical-align:middle;padding:2px 3px !important;">4 hours</td>
-                            </tr>
-                        </table>
-                    </td>`;
-                }
+            const parsedDate = new Date(dateValue);
+            const isWeekendDay = !isNaN(parsedDate.getTime())
+                && (parsedDate.getDay() === 0 || parsedDate.getDay() === 6);
 
-                const desc = row.querySelector('.t-desc').value;
-                let remark = row.querySelector('.t-remarks').value || "-DONE";
+            let am = block.querySelector('.d-am').value.trim();
+            let pm = block.querySelector('.d-pm').value.trim();
+            if (!isWeekendDay) {
+                if (!am) am = '4 hours';
+                if (!pm) pm = '4 hours';
+            }
+            const remark = block.querySelector('.d-remarks').value.trim();
+            const timeRowsHtml = `<tr>
+                <td style="width:50%;border:none !important;text-align:center;vertical-align:middle;padding:2px 3px !important;">${escapeHtml(am)}</td>
+                <td style="width:50%;border:none !important;text-align:center;vertical-align:middle;padding:2px 3px !important;">${escapeHtml(pm)}</td>
+            </tr>`;
+            const remarksHtml = `<div class="print-remark-line">${remark ? escapeHtml(remark) : '&nbsp;'}</div>`;
 
-                tr.innerHTML = `
-                    ${dateCell}
-                    <td class="col-task">- ${desc}</td>
-                    ${timeCell}
-                    <td class="col-rem text-center">${remark.toUpperCase()}</td>
-                `;
-                output.appendChild(tr);
-            });
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="col-date text-center font-bold">${escapeHtml(dateValue)}</td>
+                <td class="col-task"><ul class="print-task-list">${tasksHtml}</ul></td>
+                <td class="col-time text-center" style="padding:0 !important;position:relative;">
+                    <div style="position:absolute;left:50%;top:0;bottom:0;width:0;border-left:2px solid #000;"></div>
+                    <table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;">
+                        ${timeRowsHtml}
+                    </table>
+                </td>
+                <td class="col-rem text-center"><div class="print-remark-list">${remarksHtml}</div></td>
+            `;
+            output.appendChild(tr);
         });
     }
 
@@ -1999,6 +2072,10 @@ html[data-theme="light"] .chat-input-row {
                 .col-task { text-align: left; width: 50%; }
                 .col-time { text-align: center; width: 23%; font-size: 8.5pt; }
                 .col-rem { text-align: center; font-weight: bold; width: 15%; font-size: 8.5pt; }
+                .print-task-list { list-style: none; margin: 0; padding: 0; }
+                .print-task-list li { padding-left: 12px; text-indent: -12px; }
+                .print-remark-list { display: block; }
+                .print-remark-line { line-height: 1.15; }
                 .text-center { text-align: center; }
                 .text-left { text-align: left; }
                 .font-bold { font-weight: bold; }
@@ -2215,7 +2292,7 @@ ${reportContent}
                 <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="toggleTemplate(${index}, this.checked)">
                 <span class="flex-1 min-w-0">
                     <span class="block text-xs font-semibold truncate">${escapeHtml(item.activity)}</span>
-                    <span class="block text-[10px] opacity-60">${escapeHtml(item.start_time || '4 hrs')} · ${escapeHtml(item.remarks || '-DONE')}</span>
+                    <span class="block text-[10px] opacity-60">${escapeHtml(item.start_time || '4 hours')} | ${escapeHtml(item.end_time || '4 hours')} · ${escapeHtml(item.remarks || '-DONE')}</span>
                 </span>
             </label>
         `).join('');
@@ -2237,11 +2314,14 @@ ${reportContent}
                 remarks: t.remarks
             }));
 
+        const monthFilter = document.getElementById('monthFilter');
+        const month = monthFilter && monthFilter.value ? monthFilter.value : '';
+
         try {
             const r = await fetch('app_api.php?action=save_templates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ templates })
+                body: JSON.stringify({ templates, month })
             });
             const data = await r.json();
             if (data.status === 'ok') {
@@ -2292,19 +2372,35 @@ ${reportContent}
             block.querySelector('.d-date').value.trim().toLowerCase() === String(dateStr).trim().toLowerCase()
         );
 
+        const targetDate = new Date(dateStr);
+        const targetWeekend = !isNaN(targetDate.getTime())
+            && (targetDate.getDay() === 0 || targetDate.getDay() === 6);
+
+        const first = tasks[0] || {};
+        const sourceAm = normalizeDayTime(first.start, targetWeekend);
+        const sourcePm = normalizeDayTime(first.end, targetWeekend);
         if (!target) {
             addDay({
                 date: dateStr,
                 tasks: tasks.map(t => t.desc || ''),
-                durations: tasks.map(t => t.start || '4 hrs'),
-                remarks: tasks.map(t => t.remarks || '-DONE')
+                am: sourceAm,
+                pm: sourcePm,
+                remarks: first.remarks || '-DONE'
             });
             return;
         }
 
+        const setIfEmpty = (selector, value) => {
+            const el = target.querySelector(selector);
+            if (el && !el.value.trim() && value) el.value = value;
+        };
+        setIfEmpty('.d-am', sourceAm);
+        setIfEmpty('.d-pm', sourcePm);
+        setIfEmpty('.d-remarks', first.remarks || '-DONE');
+
         const taskList = target.querySelector('.task-list');
         tasks.forEach(t => {
-            addTaskRowToElement(taskList, t.desc || '', t.start || '4 hrs', t.end || '', t.remarks || '-DONE');
+            addTaskRowToElement(taskList, t.desc || '');
         });
         handleInput();
     }

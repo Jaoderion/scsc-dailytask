@@ -159,25 +159,14 @@ function generateForToday($conn, $me)
     $already = $chk->num_rows > 0;
     $chk->close();
     if ($already) {
-        return 0;
+        return ensureWeekendPlaceholders($conn, $me);
     }
-
-    $sat = 0;
-    $sun = 0;
-    $s = $conn->prepare("SELECT include_saturday, include_sunday FROM user_daily_settings WHERE username = ?");
-    $s->bind_param('s', $me);
-    $s->execute();
-    $r = $s->get_result();
-    if ($row = $r->fetch_assoc()) {
-        $sat = (int)$row['include_saturday'];
-        $sun = (int)$row['include_sunday'];
-    }
-    $s->close();
 
     $dow = (int)date('w', strtotime($today));
-    if (($dow === 6 && !$sat) || ($dow === 0 && !$sun)) {
+    if ($dow === 6 || $dow === 0) {
+        $weekendAdded = ensureWeekendPlaceholders($conn, $me);
         markGenerated($conn, $me, $today);
-        return 0;
+        return $weekendAdded;
     }
 
     $t = $conn->prepare("SELECT activity, start_time, end_time, remarks FROM daily_task_templates WHERE username = ? ORDER BY sort_order, id");
@@ -193,7 +182,7 @@ function generateForToday($conn, $me)
     if (!$templates) {
         // Nothing selected yet: don't mark, so checking a task later can still
         // generate it for the current day.
-        return 0;
+        return ensureWeekendPlaceholders($conn, $me);
     }
 
     $exists = $conn->prepare("SELECT 1 FROM accomplishments WHERE username = ? AND report_date = ? AND activity = ? LIMIT 1");
@@ -221,7 +210,144 @@ function generateForToday($conn, $me)
     $exists->close();
     $ins->close();
 
+    $weekendAdded = ensureWeekendPlaceholders($conn, $me);
+
     markGenerated($conn, $me, $today);
+    return $added + $weekendAdded;
+}
+
+/**
+ * Fills every Saturday and Sunday position for every month found in the
+ * database with a default empty placeholder (day name, empty time/remarks).
+ * Existing entries are never touched.
+ */
+function ensureWeekendPlaceholders($conn, $me)
+{
+    $stmt = $conn->prepare("SELECT DISTINCT report_date FROM accomplishments WHERE username = ?");
+    $stmt->bind_param('s', $me);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $dates = [];
+    $months = [];
+    while ($row = $res->fetch_assoc()) {
+        $parsed = strtotime($row['report_date']);
+        if ($parsed === false) {
+            continue;
+        }
+        $key = date('Y-m-d', $parsed);
+        $dates[$key] = true;
+        $months[substr($key, 0, 7)] = true;
+    }
+    $stmt->close();
+
+    $targets = [];
+    foreach ($months as $ym => $unused) {
+        list($year, $month) = array_map('intval', explode('-', $ym));
+        $daysInMonth = (int)date('t', mktime(0, 0, 0, $month, 1, $year));
+
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $ts = mktime(0, 0, 0, $month, $day, $year);
+            $dow = (int)date('w', $ts);
+            if ($dow === 6) {
+                $targets[date('Y-m-d', $ts)] = 'Saturday';
+            } elseif ($dow === 0) {
+                $targets[date('Y-m-d', $ts)] = 'Sunday';
+            }
+        }
+    }
+
+    if (!$targets) {
+        return 0;
+    }
+
+    ksort($targets);
+
+    $ins = $conn->prepare("INSERT INTO accomplishments (username, report_date, activity, start_time, end_time, remarks) VALUES (?, ?, ?, '', '', '')");
+    $added = 0;
+
+    foreach ($targets as $key => $label) {
+        if (isset($dates[$key])) {
+            continue;
+        }
+        $ts = strtotime($key);
+        $displayDate = date('M d, Y', $ts);
+        $ins->bind_param('sss', $me, $displayDate, $label);
+        if ($ins->execute()) {
+            $added++;
+            $dates[$key] = true;
+        }
+    }
+
+    $ins->close();
+    return $added;
+}
+
+/**
+ * Applies the user's checked templates to every working day (Mon-Fri) of the
+ * given YYYY-MM month. Weekends are skipped. Existing activities are never
+ * duplicated, so manual edits are preserved.
+ */
+function generateForMonthWorkingDays($conn, $me, $month)
+{
+    if (!preg_match('/^(\d{4})-(\d{2})$/', (string)$month, $m)) {
+        return 0;
+    }
+    $year = (int)$m[1];
+    $mon = (int)$m[2];
+    if ($year < 2000 || $mon < 1 || $mon > 12) {
+        return 0;
+    }
+
+    $t = $conn->prepare("SELECT activity, start_time, end_time, remarks FROM daily_task_templates WHERE username = ? ORDER BY sort_order, id");
+    $t->bind_param('s', $me);
+    $t->execute();
+    $tr = $t->get_result();
+    $templates = [];
+    while ($row = $tr->fetch_assoc()) {
+        $templates[] = $row;
+    }
+    $t->close();
+
+    if (!$templates) {
+        return 0;
+    }
+
+    $daysInMonth = (int)date('t', mktime(0, 0, 0, $mon, 1, $year));
+    $exists = $conn->prepare("SELECT 1 FROM accomplishments WHERE username = ? AND activity = ? AND STR_TO_DATE(report_date, '%b %d, %Y') = ? LIMIT 1");
+    $ins = $conn->prepare("INSERT INTO accomplishments (username, report_date, activity, start_time, end_time, remarks) VALUES (?, ?, ?, ?, ?, ?)");
+    $added = 0;
+
+    for ($day = 1; $day <= $daysInMonth; $day++) {
+        $ts = mktime(0, 0, 0, $mon, $day, $year);
+        $dow = (int)date('w', $ts);
+        if ($dow === 0 || $dow === 6) {
+            continue;
+        }
+        $display = date('M d, Y', $ts);
+        $dateKey = date('Y-m-d', $ts);
+
+        foreach ($templates as $tpl) {
+            $activity = $tpl['activity'];
+            $exists->bind_param('sss', $me, $activity, $dateKey);
+            $exists->execute();
+            $exists->store_result();
+            if ($exists->num_rows > 0) {
+                $exists->free_result();
+                continue;
+            }
+            $exists->free_result();
+
+            $start = isset($tpl['start_time']) ? $tpl['start_time'] : '';
+            $end = isset($tpl['end_time']) ? $tpl['end_time'] : '';
+            $remarks = isset($tpl['remarks']) && $tpl['remarks'] !== '' ? $tpl['remarks'] : '-DONE';
+            $ins->bind_param('ssssss', $me, $display, $activity, $start, $end, $remarks);
+            $ins->execute();
+            $added++;
+        }
+    }
+
+    $exists->close();
+    $ins->close();
     return $added;
 }
 
@@ -481,7 +607,13 @@ function saveTemplates($conn, $me)
     $delg->execute();
     $delg->close();
 
+    $month = isset($data['month']) ? trim($data['month']) : '';
+    if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+        $month = date('Y-m');
+    }
+
     $added = generateForToday($conn, $me);
+    $added += generateForMonthWorkingDays($conn, $me, $month);
     jout(['status' => 'ok', 'generated' => $added]);
 }
 

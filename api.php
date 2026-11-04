@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     foreach ($data as $row) {
         // Map JS keys to DB columns + include the username
-        $remarks = isset($row['remarks']) && $row['remarks'] !== '' ? $row['remarks'] : '-DONE';
+        $remarks = isset($row['remarks']) ? $row['remarks'] : '';
         $stmt->bind_param("ssssss",
             $logged_user, 
             $row['date'], 
