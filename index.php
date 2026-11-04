@@ -992,6 +992,10 @@ html[data-theme="light"] .chat-input-row {
                   Save
                 </button>
 
+                <button onclick="window.print()" class="btn-thick px-8 py-3 rounded-xl bg-blue-600 border-blue-700 border-b-blue-900 text-white font-bold shadow-[0_5px_15px_rgba(59,130,246,0.3)] hover:bg-blue-500 transition-all active:scale-95 flex items-center">
+                    Print
+                </button>
+
                 <button onclick="exportToWord()" id="exportWordBtn" class="btn-thick px-8 py-3 rounded-xl bg-blue-600 border-blue-700 border-b-blue-900 text-white font-bold shadow-[0_5px_15px_rgba(59,130,246,0.3)] hover:bg-blue-500 transition-all active:scale-95 flex items-center">
                     Export Word
                 </button>
