@@ -1041,7 +1041,7 @@ html[data-theme="light"] .chat-input-row {
                         </div>
 
                         <div class="mt-10 text-center" style="page-break-inside: avoid; break-inside: avoid;">
-                            <p class="mb-14">Reviewed and Approved:</p>
+                            <p class="mb-14">Review and Evaluated:</p>
                             <div class="inline-block text-center">
                                 <p class="font-bold underline"><?php echo $administrative_name; ?></p>
                                 <p><?php echo $administrative_title; ?></p>
