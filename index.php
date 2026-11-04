@@ -69,23 +69,13 @@ $department = $user_data['department'];
 :root {
     --app-bg: #070b16;
     --app-text: #e2e8f0;
-    --app-muted: #94a3b8;
-    --app-surface: rgba(15, 23, 42, 0.55);
-    --app-surface-2: rgba(255, 255, 255, 0.05);
-    --app-border: rgba(255, 255, 255, 0.10);
     --app-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.75);
-    --app-orb-opacity: 0.55;
 }
 
 html[data-theme="light"] {
     --app-bg: #e9eef8;
     --app-text: #1e293b;
-    --app-muted: #64748b;
-    --app-surface: rgba(255, 255, 255, 0.72);
-    --app-surface-2: rgba(255, 255, 255, 0.55);
-    --app-border: rgba(15, 23, 42, 0.10);
     --app-shadow: 0 24px 60px -24px rgba(15, 23, 42, 0.30);
-    --app-orb-opacity: 0.42;
 }
 
 /* =========================================================
@@ -327,16 +317,12 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
             transition: background-color 0.5s ease, color 0.5s ease;
         }
 
-        /* Keep app content above the ambient layer */
+        /* Keep app content above background layers */
         main, #report-preview {
             position: relative;
             z-index: 10;
         }
 
-        @media print {
-            .ambient { display: none !important; }
-        }
-        
         .neon-border-blue {
             box-shadow: 0 0 10px rgba(59, 130, 246, 0.2), inset 0 0 5px rgba(59, 130, 246, 0.1);
         }
@@ -376,31 +362,19 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
             transform: translateY(4px);
         }
 
-       @media print {
-
-
-.signatory-section {
+    @media print {
+    .signatory-section {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
         display: block !important;
-        margin-top: 30px !important; /* Adds breathing room after the table */
+        margin-top: 30px !important;
     }
 
-    /* Optional: Ensure the names and titles don't separate from their "Prepared by" label */
     .signatory-section > div {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
     }
 
-
-
-
-
-
-
-
-   
-    
     @page { 
         size: portrait; 
         margin: 0.4in; /* Slightly smaller margin to give the table more room */
@@ -421,20 +395,6 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
     /* Header AND footer repeat on every printed page */
     thead { display: table-header-group; }
     tfoot { display: table-footer-group; }
-
-    /* Header Text Arrangement - Tightened */
-    .report-header-text {
-        text-align: center;
-        margin-top: 5px; /* Reduced */
-        margin-bottom: 10px; /* Reduced */
-    }
-
-    .report-header-text h3 {
-        font-size: 11pt; /* Scaled down */
-        font-weight: bold;
-        text-decoration: underline;
-        text-transform: uppercase;
-    }
 
     /* Fixed Footer Position - UNCHANGED */
  
@@ -542,8 +502,6 @@ html[data-theme="light"] .day-block button[title="Remove Entry"]:hover {
 }
 
 #inputs.view-grid .t-desc, 
-#inputs.view-grid .t-start, 
-#inputs.view-grid .t-end, 
 #inputs.view-grid .t-remarks {
     font-size: 10px !important;
     padding: 4px 8px !important;
@@ -1189,7 +1147,6 @@ html[data-theme="light"] .chat-input-row {
     // 1. GLOBAL STATE & DATALISTS
     // -----------------------------------------------------------------
     const CURRENT_USER = <?php echo json_encode($username); ?>;
-    const CURRENT_USER_NAME = <?php echo json_encode($employee_name); ?>;
 
     let history = JSON.parse(localStorage.getItem('krc_history')) || {
         tasks: [],
@@ -1429,26 +1386,6 @@ html[data-theme="light"] .chat-input-row {
         if (mins > 0) result += `${hours > 0 ? ' ' : ''}${mins} min${mins > 1 ? 's' : ''}`;
 
         return result || "0 hrs";
-    }
-
-    // Helper to extract numeric hours from strings like "4 hrs", "2.5 hrs", "30 mins"
-    function parseDurationToHours(durationStr) {
-        if (!durationStr) return 0;
-
-        let totalHours = 0;
-        const hrMatch = durationStr.match(/([\d.]+)\s*hr/i);
-        const minMatch = durationStr.match(/([\d.]+)\s*min/i);
-
-        if (hrMatch) totalHours += parseFloat(hrMatch[1]);
-        if (minMatch) totalHours += parseFloat(minMatch[1]) / 60;
-
-        // Fallback for raw numeric entries
-        if (!hrMatch && !minMatch) {
-            const rawNum = parseFloat(durationStr);
-            if (!isNaN(rawNum)) totalHours += rawNum;
-        }
-
-        return totalHours;
     }
 
     // -----------------------------------------------------------------
@@ -2004,9 +1941,6 @@ html[data-theme="light"] .chat-input-row {
                 body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; }
                 p.MsoHeader, p.MsoFooter { margin: 0; padding: 0; }
                 table { border-collapse: collapse; }
-                #report-preview { width: 100%; }
-                .print-img-header, .print-img-footer { width: 100%; display: block; }
-                .report-header-text h3 { font-size: 11pt; font-weight: bold; text-decoration: underline; text-transform: uppercase; }
                 .styled-table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1pt solid #000; margin-top: 5px; }
                 .styled-table th { background-color: #f2f2f2; border: 1pt solid #000; padding: 4px 2px; font-size: 9pt; font-weight: bold; text-align: center; text-transform: uppercase; }
                 .styled-table td { border: 1pt solid #000; padding: 2px 4px; vertical-align: middle; line-height: 1.15; }
@@ -2033,7 +1967,6 @@ html[data-theme="light"] .chat-input-row {
                 .p-2 { padding: 6px; }
                 .signatory-section { page-break-inside: avoid; }
                 .signatory-section td { page-break-inside: avoid; }
-                .footer-spacer { height: 18px; }
             `;
 
             const html = `<!DOCTYPE html>
