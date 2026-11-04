@@ -996,10 +996,6 @@ html[data-theme="light"] .chat-input-row {
                     Print
                 </button>
 
-                <button onclick="exportToWord()" id="exportWordBtn" class="btn-thick px-8 py-3 rounded-xl bg-blue-600 border-blue-700 border-b-blue-900 text-white font-bold shadow-[0_5px_15px_rgba(59,130,246,0.3)] hover:bg-blue-500 transition-all active:scale-95 flex items-center">
-                    Export Word
-                </button>
-
 
                     <button onclick="toggleView()" class="p-3 rounded-xl bg-slate-800 border border-white/10 text-slate-400 hover:text-white transition-all flex items-center gap-2" id="view-toggle-btn">
         <svg id="grid-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1161,7 +1157,7 @@ html[data-theme="light"] .chat-input-row {
         <div class="p-5 border-t border-white/10">
             <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Download report</h3>
             <p class="text-xs opacity-60 mb-3">Export your accomplishment report as a Microsoft Word (.doc) file you can edit and print.</p>
-            <button type="button" onclick="exportToWord()" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Download Word (.doc)</button>
+            <button type="button" onclick="exportToWord()" id="exportWordBtn" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Export Word (.doc)</button>
         </div>
     </div>
 </div>
