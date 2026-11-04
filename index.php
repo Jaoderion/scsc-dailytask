@@ -1070,12 +1070,62 @@ html[data-theme="light"] .chat-input-row {
         <div class="modal-head">
             <div>
                 <h2 class="font-bold text-lg">Settings</h2>
-                <p class="text-[11px] opacity-60">Automatic daily tasks and copying from other users</p>
+                <p class="text-[11px] opacity-60">Account details, daily tasks, and copying from other users</p>
             </div>
             <button type="button" class="modal-close" onclick="closeSettings()">&times;</button>
         </div>
 
         <div class="p-5">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Account details</h3>
+            <p class="text-xs opacity-60 mb-3">Update the information from your registration form, username, and password.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Full Name</label>
+                    <input type="text" id="acctEmployeeName" class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Full name">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Username</label>
+                    <input type="text" id="acctUsername" class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Username">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">New Password</label>
+                    <input type="password" id="acctPassword" class="glass-input w-full rounded-lg px-3 py-2 text-sm" placeholder="Leave blank to keep current password" autocomplete="new-password">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Prepared By - Name</label>
+                    <input type="text" id="acctStaffName" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Prepared By - Title</label>
+                    <input type="text" id="acctStaffPosition" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Noted By - Name</label>
+                    <input type="text" id="acctHeadName" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Noted By - Title</label>
+                    <input type="text" id="acctHeadTitle" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Reviewed &amp; Approved - Name</label>
+                    <input type="text" id="acctAdminName" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Reviewed &amp; Approved - Title</label>
+                    <input type="text" id="acctAdminTitle" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-[10px] uppercase font-bold opacity-60 mb-1">Department / Unit</label>
+                    <input type="text" id="acctDepartment" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
+                </div>
+            </div>
+
+            <button type="button" onclick="saveAccount()" class="mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Save Account</button>
+        </div>
+
+        <div class="p-5 border-t border-white/10">
             <h3 class="font-bold text-sm uppercase tracking-wider text-blue-400 mb-1">Auto-generate daily tasks</h3>
             <p class="text-xs opacity-60 mb-3">Check the tasks you do regularly. They will be added automatically each new day.</p>
             <div id="recentTasksList" class="max-h-64 overflow-y-auto pr-1">
@@ -2038,8 +2088,75 @@ ${reportContent}
             String(now.getDate()).padStart(2, '0');
         document.getElementById('copyMonth').value = monthKeyOf(now);
 
+        loadAccount();
         loadSettings();
         fillCopyUsers();
+    }
+
+    async function loadAccount() {
+        try {
+            const r = await fetch('app_api.php?action=get_account');
+            const data = await r.json();
+            if (data.status !== 'ok' || !data.account) return;
+
+            const a = data.account;
+            const set = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.value = value || '';
+            };
+            set('acctEmployeeName', a.employee_name);
+            set('acctUsername', a.username);
+            set('acctStaffName', a.staff_name);
+            set('acctStaffPosition', a.staff_position);
+            set('acctHeadName', a.head_name);
+            set('acctHeadTitle', a.head_title);
+            set('acctAdminName', a.administrative_name);
+            set('acctAdminTitle', a.administrative_title);
+            set('acctDepartment', a.department);
+            set('acctPassword', '');
+        } catch (e) {}
+    }
+
+    async function saveAccount() {
+        const val = id => {
+            const el = document.getElementById(id);
+            return el ? el.value.trim() : '';
+        };
+
+        const payload = {
+            employee_name: val('acctEmployeeName'),
+            username: val('acctUsername'),
+            password: document.getElementById('acctPassword') ? document.getElementById('acctPassword').value : '',
+            staff_name: val('acctStaffName'),
+            staff_position: val('acctStaffPosition'),
+            head_name: val('acctHeadName'),
+            head_title: val('acctHeadTitle'),
+            administrative_name: val('acctAdminName'),
+            administrative_title: val('acctAdminTitle'),
+            department: val('acctDepartment')
+        };
+
+        if (!payload.employee_name || !payload.username) {
+            notify('Name and username are required', 'error');
+            return;
+        }
+
+        try {
+            const r = await fetch('app_api.php?action=update_account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await r.json();
+            if (data.status === 'ok') {
+                notify('Account updated', 'success');
+                setTimeout(() => window.location.reload(), 700);
+            } else {
+                notify(data.message || 'Could not update account', 'error');
+            }
+        } catch (e) {
+            notify('Network error', 'error');
+        }
     }
 
     function closeSettings() {

@@ -39,6 +39,14 @@ switch ($action) {
         getSettings($conn, $me);
         break;
 
+    case 'get_account':
+        getAccount($conn, $me);
+        break;
+
+    case 'update_account':
+        updateAccount($conn, $me);
+        break;
+
     case 'save_templates':
         saveTemplates($conn, $me);
         break;
@@ -287,6 +295,111 @@ function sendMessage($conn, $me)
     $ins->close();
 
     jout(['status' => 'ok']);
+}
+
+function getAccount($conn, $me)
+{
+    $stmt = $conn->prepare("SELECT username, employee_name, staff_name, staff_position, head_name, head_title, administrative_name, administrative_title, department FROM users WHERE username = ?");
+    $stmt->bind_param('s', $me);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$row) {
+        jout(['status' => 'error', 'message' => 'User not found']);
+    }
+
+    jout(['status' => 'ok', 'account' => $row]);
+}
+
+function updateAccount($conn, $me)
+{
+    $data = body();
+    $field = function ($key) use ($data) {
+        return isset($data[$key]) ? trim((string)$data[$key]) : '';
+    };
+
+    $employee_name = $field('employee_name');
+    $new_username = $field('username');
+    $password = isset($data['password']) ? (string)$data['password'] : '';
+
+    if ($employee_name === '' || $new_username === '') {
+        jout(['status' => 'error', 'message' => 'Name and username are required']);
+    }
+    if (strlen($new_username) > 50) {
+        jout(['status' => 'error', 'message' => 'Username is too long']);
+    }
+    if (!preg_match('/^[A-Za-z0-9_.-]+$/', $new_username)) {
+        jout(['status' => 'error', 'message' => 'Username may only contain letters, numbers, dot, dash or underscore']);
+    }
+
+    if ($new_username !== $me) {
+        $chk = $conn->prepare("SELECT 1 FROM users WHERE username = ? LIMIT 1");
+        $chk->bind_param('s', $new_username);
+        $chk->execute();
+        $chk->store_result();
+        $exists = $chk->num_rows > 0;
+        $chk->close();
+        if ($exists) {
+            jout(['status' => 'error', 'message' => 'That username is already taken']);
+        }
+    }
+
+    $staff_name = $field('staff_name');
+    $staff_position = $field('staff_position');
+    $head_name = $field('head_name');
+    $head_title = $field('head_title');
+    $administrative_name = $field('administrative_name');
+    $administrative_title = $field('administrative_title');
+    $department = $field('department');
+
+    $conn->begin_transaction();
+
+    if ($password !== '') {
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+        $stmt = $conn->prepare("UPDATE users SET username = ?, password = ?, employee_name = ?, staff_name = ?, staff_position = ?, head_name = ?, head_title = ?, administrative_name = ?, administrative_title = ?, department = ? WHERE username = ?");
+        $stmt->bind_param('sssssssssss', $new_username, $hash, $employee_name, $staff_name, $staff_position, $head_name, $head_title, $administrative_name, $administrative_title, $department, $me);
+    } else {
+        $stmt = $conn->prepare("UPDATE users SET username = ?, employee_name = ?, staff_name = ?, staff_position = ?, head_name = ?, head_title = ?, administrative_name = ?, administrative_title = ?, department = ? WHERE username = ?");
+        $stmt->bind_param('ssssssssss', $new_username, $employee_name, $staff_name, $staff_position, $head_name, $head_title, $administrative_name, $administrative_title, $department, $me);
+    }
+
+    if (!$stmt->execute()) {
+        $conn->rollback();
+        jout(['status' => 'error', 'message' => 'Could not update account']);
+    }
+    $stmt->close();
+
+    if ($new_username !== $me) {
+        foreach (['accomplishments', 'daily_task_templates', 'daily_task_generation', 'user_daily_settings', 'messages'] as $table) {
+            $up = $conn->prepare("UPDATE `$table` SET username = ? WHERE username = ?");
+            $up->bind_param('ss', $new_username, $me);
+            if (!$up->execute()) {
+                $up->close();
+                $conn->rollback();
+                jout(['status' => 'error', 'message' => 'Could not update related records']);
+            }
+            $up->close();
+        }
+
+        $up = $conn->prepare("UPDATE messages SET recipient = ? WHERE recipient = ?");
+        $up->bind_param('ss', $new_username, $me);
+        $up->execute();
+        $up->close();
+
+        $_SESSION['username'] = $new_username;
+    }
+
+    if ($new_username !== $me || $employee_name !== '') {
+        $up = $conn->prepare("UPDATE messages SET employee_name = ? WHERE username = ?");
+        $up->bind_param('ss', $employee_name, $new_username);
+        $up->execute();
+        $up->close();
+    }
+
+    $conn->commit();
+
+    jout(['status' => 'ok', 'message' => 'Account updated', 'username' => $new_username]);
 }
 
 function getSettings($conn, $me)
