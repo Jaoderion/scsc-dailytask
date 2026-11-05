@@ -2302,7 +2302,8 @@ html[data-theme="light"] .chat-input-row {
             const remark = block.querySelector('.d-remarks').value.trim();
 
             // Empty days (no AM, PM, or remarks) are plain labels like "Sunday".
-            const noBullet = !am && !pm && !remark;
+            // When Style is set to center/right, the bullet is removed too.
+            const noBullet = (rowAlign !== 'left') || (!am && !pm && !remark);
             const tasksHtml = taskRows.map(row => {
                 const desc = row.querySelector('.t-desc').value.trim();
                 return `<li${liStyle}>${noBullet ? '' : '• '}${escapeHtml(desc)}</li>`;
