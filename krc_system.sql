@@ -33,7 +33,7 @@ CREATE TABLE `accomplishments` (
   `activity` text DEFAULT NULL,
   `start_time` varchar(20) DEFAULT NULL,
   `end_time` varchar(20) DEFAULT NULL,
-  `remarks` varchar(20) DEFAULT '-DONE',
+  `remarks` varchar(20) DEFAULT 'DONE',
   `username` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -688,7 +688,7 @@ CREATE TABLE `daily_task_templates` (
   `activity` text NOT NULL,
   `start_time` varchar(20) DEFAULT NULL,
   `end_time` varchar(20) DEFAULT NULL,
-  `remarks` varchar(20) DEFAULT '-DONE',
+  `remarks` varchar(20) DEFAULT 'DONE',
   `sort_order` int(11) NOT NULL DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

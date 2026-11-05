@@ -995,7 +995,7 @@ html[data-theme="light"] .chat-input-row {
                   Save
                 </button>
 
-                <button onclick="window.print()" class="btn-thick px-8 py-3 rounded-xl bg-blue-600 border-blue-700 border-b-blue-900 text-white font-bold shadow-[0_5px_15px_rgba(59,130,246,0.3)] hover:bg-blue-500 transition-all active:scale-95 flex items-center">
+                <button onclick="printReport()" class="btn-thick px-8 py-3 rounded-xl bg-blue-600 border-blue-700 border-b-blue-900 text-white font-bold shadow-[0_5px_15px_rgba(59,130,246,0.3)] hover:bg-blue-500 transition-all active:scale-95 flex items-center">
                     Print
                 </button>
 
@@ -1086,7 +1086,7 @@ html[data-theme="light"] .chat-input-row {
                         </div>
 
                         <div class="mt-10 text-center" style="page-break-inside: avoid; break-inside: avoid;">
-                            <p class="mb-14">Review and Evaluated by:</p>
+                            <p class="mb-14">Review and evaluated by:</p>
                             <div class="inline-block text-center">
                                 <p class="font-bold underline"><?php echo $administrative_name; ?></p>
                                 <p><?php echo $administrative_title; ?></p>
@@ -1334,7 +1334,7 @@ html[data-theme="light"] .chat-input-row {
     let history = JSON.parse(localStorage.getItem('krc_history')) || {
         tasks: [],
         times: ["4 hours", "8 hours", "2 hours", "1 hour"],
-        remarks: ["-DONE", "IN PROGRESS", "PENDING"]
+        remarks: ["DONE", "IN PROGRESS", "PENDING"]
     };
 
     let allUsers = [];
@@ -1342,6 +1342,8 @@ html[data-theme="light"] .chat-input-row {
     let chatPollTimer = null;
     let recentTaskState = [];
     let generationSettings = { generate_all_month: 0, include_saturday: 0, include_sunday: 0 };
+    let saveTimer = null;
+    let isLoadingData = false;
 
     function updateDataLists() {
         let taskList = document.getElementById('history-tasks');
@@ -1450,9 +1452,31 @@ html[data-theme="light"] .chat-input-row {
         }
     }
 
-    function handleInput() { 
-        renderTable(); 
-        updateCopyDropdowns(); 
+    function handleInput() {
+        renderTable();
+        updateCopyDropdowns();
+        scheduleSave();
+    }
+
+    // Keep the database in sync with the form automatically (debounced).
+    function scheduleSave() {
+        if (isLoadingData) return;
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+            saveTimer = null;
+            saveToDB(true);
+        }, 900);
+    }
+
+    // Always rebuild the printed report from the current form values before printing.
+    function printReport() {
+        if (saveTimer) {
+            clearTimeout(saveTimer);
+            saveTimer = null;
+        }
+        renderTable();
+        saveToDB(true);
+        window.print();
     }
 
     function notify(message, type = 'success') {
@@ -1789,20 +1813,18 @@ html[data-theme="light"] .chat-input-row {
         return !isNaN(d.getTime()) && (d.getDay() === 0 || d.getDay() === 6);
     }
 
-    function normalizeDayTime(value, isWeekend) {
-        const v = String(value == null ? '' : value).trim();
-        const autoFour = /^4\s*(hrs?|hours?)$/i.test(v);
-        if (isWeekend) return autoFour ? '' : v;
-        return (!v || autoFour) ? '4 hours' : v;
+    // Keep AM/PM exactly as saved. No automatic "4 hours" fallback, so an
+    // intentionally empty value stays empty after reload and on the report.
+    function normalizeDayTime(value) {
+        return String(value == null ? '' : value).trim();
     }
 
     function applyDayTimeDefaults(block) {
         if (!block) return;
-        const weekend = isWeekendDateValue(block.querySelector('.d-date').value);
         const am = block.querySelector('.d-am');
         const pm = block.querySelector('.d-pm');
-        if (am) am.value = normalizeDayTime(am.value, weekend);
-        if (pm) pm.value = normalizeDayTime(pm.value, weekend);
+        if (am) am.value = normalizeDayTime(am.value);
+        if (pm) pm.value = normalizeDayTime(pm.value);
     }
 
     function applyAllDayTimeDefaults() {
@@ -1830,10 +1852,9 @@ html[data-theme="light"] .chat-input-row {
         const parsedDefaultDate = new Date(defaultDate);
         const isWeekend = !isNaN(parsedDefaultDate.getTime())
             && (parsedDefaultDate.getDay() === 0 || parsedDefaultDate.getDay() === 6);
-        const fallbackTime = isWeekend ? '' : '4 hours';
-        let dayAm = fallbackTime;
-        let dayPm = fallbackTime;
-        let dayRemarks = isWeekend ? '' : '-DONE';
+        let dayAm = '';
+        let dayPm = '';
+        let dayRemarks = isWeekend ? '' : 'DONE';
         if (data) {
             if (Array.isArray(data.ams)) dayAm = normalizeDayTime(data.ams[0], isWeekend);
             else if (Array.isArray(data.durations)) dayAm = normalizeDayTime(data.durations[0], isWeekend);
@@ -2089,14 +2110,28 @@ html[data-theme="light"] .chat-input-row {
     // -----------------------------------------------------------------
     // 6. DB SAVE & LOAD (API INTEGRATION)
     // -----------------------------------------------------------------
-    async function saveToDB() {
+    let saveQueue = Promise.resolve();
+
+    // Serialize saves so overlapping requests never interleave DELETE/INSERT.
+    function saveToDB(silent = false) {
+        if (saveTimer) {
+            clearTimeout(saveTimer);
+            saveTimer = null;
+        }
+        saveQueue = saveQueue.then(() => performSave(silent)).catch(() => false);
+        return saveQueue;
+    }
+
+    async function performSave(silent) {
         const data = [];
         document.querySelectorAll('.day-block').forEach(block => {
             const date = block.querySelector('.d-date').value;
             const start = block.querySelector('.d-am').value;
             const end = block.querySelector('.d-pm').value;
             const remarks = block.querySelector('.d-remarks').value;
+            let hasRow = false;
             block.querySelectorAll('.task-row').forEach(row => {
+                hasRow = true;
                 data.push({
                     date: date,
                     desc: row.querySelector('.t-desc').value,
@@ -2105,6 +2140,16 @@ html[data-theme="light"] .chat-input-row {
                     remarks: remarks
                 });
             });
+            // Keep standalone AM/PM/remarks edits (days without activities) in sync too.
+            if (!hasRow && (date || start || end || remarks)) {
+                data.push({
+                    date: date,
+                    desc: '',
+                    start: start,
+                    end: end,
+                    remarks: remarks
+                });
+            }
         });
         try {
             const response = await fetch('api.php', {
@@ -2113,44 +2158,52 @@ html[data-theme="light"] .chat-input-row {
                 body: JSON.stringify(data)
             });
             const result = await response.json();
-            if (result.status === "success") notify("System Synced Successfully", "success");
-        } catch (e) { 
-            notify("Network Error", "error"); 
+            if (result.status === "success" && !silent) notify("System Synced Successfully", "success");
+            return result.status === "success";
+        } catch (e) {
+            if (!silent) notify("Network Error", "error");
+            return false;
         }
     }
 
     async function loadFromDB() {
+        // Flush any pending edits before pulling fresh data from the server.
+        if (saveTimer) {
+            clearTimeout(saveTimer);
+            saveTimer = null;
+            saveToDB(true);
+        }
+        await saveQueue.catch(() => {});
+
+        isLoadingData = true;
         try {
             const response = await fetch('api.php');
             const savedData = await response.json();
             if (savedData && savedData.length > 0) {
                 document.getElementById('inputs').innerHTML = '';
 
-                // Group rows into consecutive blocks (rows of one day entry are saved
-                // contiguously), so the manual order set via drag & drop is preserved.
-                const groups = [];
+                // Group all rows with the same date together (not only consecutive
+                // ones), so auto-generated/weekend rows never split a day into
+                // duplicate blocks or hide its AM/PM values.
+                const groupsByDate = new Map();
                 savedData.forEach(curr => {
-                    const last = groups[groups.length - 1];
-                    if (!last || last.date !== curr.report_date) {
-                        groups.push({ date: curr.report_date, tasks: [], ams: [], pms: [], remarks: [] });
+                    const key = curr.report_date;
+                    if (!groupsByDate.has(key)) {
+                        groupsByDate.set(key, { date: key, tasks: [], ams: [], pms: [], remarks: [] });
                     }
-                    const group = groups[groups.length - 1];
+                    const group = groupsByDate.get(key);
 
                     group.tasks.push(curr.activity);
 
-                    const rowDate = new Date(curr.report_date);
-                    const isWeekendDay = !isNaN(rowDate.getTime())
-                        && (rowDate.getDay() === 0 || rowDate.getDay() === 6);
-
-                    const am = normalizeDayTime(curr.start_time, isWeekendDay);
-                    const pm = normalizeDayTime(curr.end_time, isWeekendDay);
+                    const am = normalizeDayTime(curr.start_time);
+                    const pm = normalizeDayTime(curr.end_time);
 
                     group.ams.push(am);
                     group.pms.push(pm);
                     group.remarks.push(curr.remarks || "");
                 });
 
-                groups.forEach(group => {
+                groupsByDate.forEach(group => {
                     addDay({
                         date: group.date,
                         tasks: group.tasks,
@@ -2167,9 +2220,11 @@ html[data-theme="light"] .chat-input-row {
         }
 
         applyAllDayTimeDefaults();
-        handleInput();
+        renderTable();
+        updateCopyDropdowns();
         arrangeDayBlocksByDate();
         populateMonthFilter();
+        isLoadingData = false;
     }
 
     // Arrange every day block by date number so the whole month is in order.
@@ -2223,8 +2278,7 @@ html[data-theme="light"] .chat-input-row {
                 const startYear = firstDate.getFullYear();
                 const endYear = lastDate.getFullYear();
                 const startDay = String(firstDate.getDate()).padStart(2, '0');
-                const absoluteLastDay = new Date(endYear, lastDate.getMonth() + 1, 0).getDate();
-                const endDay = String(absoluteLastDay).padStart(2, '0');
+                const endDay = String(lastDate.getDate()).padStart(2, '0');
 
                 const printPeriod = document.getElementById('print-period');
                 if (printPeriod) {
@@ -2241,16 +2295,10 @@ html[data-theme="light"] .chat-input-row {
             const rowAlign = resolveAlignForDate(dateValue);
             const liStyle = rowAlign === 'left' ? '' : ' style="padding-left:0;text-indent:0;"';
 
-            const parsedDate = new Date(dateValue);
-            const isWeekendDay = !isNaN(parsedDate.getTime())
-                && (parsedDate.getDay() === 0 || parsedDate.getDay() === 6);
-
-            let am = block.querySelector('.d-am').value.trim();
-            let pm = block.querySelector('.d-pm').value.trim();
-            if (!isWeekendDay) {
-                if (!am) am = '4 hours';
-                if (!pm) pm = '4 hours';
-            }
+            // Print exactly what is in the form (no hidden defaults) so the
+            // report always matches the AM/PM values shown on screen.
+            const am = block.querySelector('.d-am').value.trim();
+            const pm = block.querySelector('.d-pm').value.trim();
             const remark = block.querySelector('.d-remarks').value.trim();
 
             // Empty days (no AM, PM, or remarks) are plain labels like "Sunday".
@@ -2574,7 +2622,7 @@ ${reportContent}
                     activity: item.activity,
                     start_time: tpl ? (tpl.start_time || '') : (item.start_time || ''),
                     end_time: tpl ? (tpl.end_time || '') : (item.end_time || ''),
-                    remarks: tpl ? (tpl.remarks || '-DONE') : (item.remarks || '-DONE'),
+                    remarks: tpl ? (tpl.remarks || 'DONE') : (item.remarks || 'DONE'),
                     enabled: !!tpl
                 });
             });
@@ -2586,7 +2634,7 @@ ${reportContent}
                     activity: tpl.activity,
                     start_time: tpl.start_time || '',
                     end_time: tpl.end_time || '',
-                    remarks: tpl.remarks || '-DONE',
+                    remarks: tpl.remarks || 'DONE',
                     enabled: true
                 });
             });
@@ -2610,7 +2658,7 @@ ${reportContent}
                 <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="toggleTemplate(${index}, this.checked)">
                 <span class="flex-1 min-w-0">
                     <span class="block text-xs font-semibold truncate">${escapeHtml(item.activity)}</span>
-                    <span class="block text-[10px] opacity-60">${escapeHtml(item.start_time || '4 hours')} | ${escapeHtml(item.end_time || '4 hours')} · ${escapeHtml(item.remarks || '-DONE')}</span>
+                    <span class="block text-[10px] opacity-60">${escapeHtml(item.start_time || '')} | ${escapeHtml(item.end_time || '')} · ${escapeHtml(item.remarks || '')}</span>
                 </span>
             </label>
         `).join('');
@@ -2764,7 +2812,7 @@ ${reportContent}
                 tasks: tasks.map(t => t.desc || ''),
                 am: sourceAm,
                 pm: sourcePm,
-                remarks: first.remarks || '-DONE'
+                remarks: first.remarks || 'DONE'
             });
             return;
         }
@@ -2775,7 +2823,7 @@ ${reportContent}
         };
         setIfEmpty('.d-am', sourceAm);
         setIfEmpty('.d-pm', sourcePm);
-        setIfEmpty('.d-remarks', first.remarks || '-DONE');
+        setIfEmpty('.d-remarks', first.remarks || 'DONE');
 
         const taskList = target.querySelector('.task-list');
         tasks.forEach(t => {

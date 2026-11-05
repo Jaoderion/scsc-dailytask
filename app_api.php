@@ -79,7 +79,7 @@ function ensureSchema($conn)
         `activity` text NOT NULL,
         `start_time` varchar(20) DEFAULT NULL,
         `end_time` varchar(20) DEFAULT NULL,
-        `remarks` varchar(20) DEFAULT '-DONE',
+        `remarks` varchar(20) DEFAULT 'DONE',
         `sort_order` int(11) NOT NULL DEFAULT 0,
         `created_at` datetime DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
@@ -210,9 +210,9 @@ function generateForToday($conn, $me)
         }
         $exists->free_result();
 
-        $start = isset($tpl['start_time']) ? $tpl['start_time'] : '';
-        $end = isset($tpl['end_time']) ? $tpl['end_time'] : '';
-        $remarks = isset($tpl['remarks']) && $tpl['remarks'] !== '' ? $tpl['remarks'] : '-DONE';
+        $start = (isset($tpl['start_time']) && trim((string)$tpl['start_time']) !== '') ? $tpl['start_time'] : '4 hours';
+        $end = (isset($tpl['end_time']) && trim((string)$tpl['end_time']) !== '') ? $tpl['end_time'] : '4 hours';
+        $remarks = isset($tpl['remarks']) && $tpl['remarks'] !== '' ? $tpl['remarks'] : 'DONE';
         $ins->bind_param('ssssss', $me, $display, $activity, $start, $end, $remarks);
         $ins->execute();
         $added++;
@@ -357,9 +357,18 @@ function generateForMonthWorkingDays($conn, $me, $month, $includeSaturday = 0, $
             }
             $exists->free_result();
 
-            $start = isset($tpl['start_time']) ? $tpl['start_time'] : '';
-            $end = isset($tpl['end_time']) ? $tpl['end_time'] : '';
-            $remarks = isset($tpl['remarks']) && $tpl['remarks'] !== '' ? $tpl['remarks'] : '-DONE';
+            // Monday to Friday: always default every generated entry to 4 hours AM / 4 hours PM.
+            if ($dow >= 1 && $dow <= 5) {
+                $start = '4 hours';
+                $end = '4 hours';
+            } else {
+                $start = (isset($tpl['start_time']) && trim((string)$tpl['start_time']) !== '') ? $tpl['start_time'] : '4 hours';
+                $end = (isset($tpl['end_time']) && trim((string)$tpl['end_time']) !== '') ? $tpl['end_time'] : '4 hours';
+            }
+            $remarks = isset($tpl['remarks']) ? trim((string)$tpl['remarks']) : '';
+            if ($remarks === '' || $remarks === '-DONE') {
+                $remarks = 'DONE';
+            }
             $ins->bind_param('ssssss', $me, $display, $activity, $start, $end, $remarks);
             $ins->execute();
             $added++;
@@ -614,7 +623,7 @@ function saveTemplates($conn, $me)
         }
         $start = isset($tpl['start_time']) ? $tpl['start_time'] : '';
         $end = isset($tpl['end_time']) ? $tpl['end_time'] : '';
-        $remarks = isset($tpl['remarks']) && $tpl['remarks'] !== '' ? $tpl['remarks'] : '-DONE';
+        $remarks = isset($tpl['remarks']) && $tpl['remarks'] !== '' ? $tpl['remarks'] : 'DONE';
         $ins->bind_param('sssssi', $me, $activity, $start, $end, $remarks, $order);
         $ins->execute();
         $order++;
